@@ -40,6 +40,7 @@ export default function GeneratorPage() {
   const [step, setStep] = useState<'loading' | 'existing' | 'method' | 'form'>('loading')
   const [prefillData, setPrefillData] = useState<ParsedResumeData | null>(null)
   const [isEditMode, setIsEditMode] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   // Get username from Clerk
   const username = user?.username || user?.firstName?.toLowerCase().replace(/\s+/g, '') || ''
@@ -77,6 +78,25 @@ export default function GeneratorPage() {
   const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    await processResumeFile(file)
+  }
+
+  const processResumeFile = async (file: File) => {
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain']
+    const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt']
+    const fileExtension = file.name.toLowerCase().slice(file.name.lastIndexOf('.'))
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      setError('Please upload a PDF, DOC, DOCX, or TXT file')
+      return
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File size must be less than 5MB')
+      return
+    }
 
     setIsParsing(true)
     setError(null)
@@ -104,6 +124,33 @@ export default function GeneratorPage() {
       setError(err.message || 'Failed to parse resume')
     } finally {
       setIsParsing(false)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isParsing) {
+      setIsDragging(true)
+    }
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+
+    if (isParsing) return
+
+    const file = e.dataTransfer.files?.[0]
+    if (file) {
+      await processResumeFile(file)
     }
   }
 
@@ -387,36 +434,44 @@ export default function GeneratorPage() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <label htmlFor="resume-upload">
-                <Card className={`cursor-pointer border hover:border-primary/50 transition-all duration-300 relative overflow-hidden group h-full ${isParsing ? 'pointer-events-none opacity-70' : ''}`}>
-                  <input
-                    id="resume-upload"
-                    type="file"
-                    accept=".pdf,.doc,.docx,.txt"
-                    onChange={handleResumeUpload}
-                    className="sr-only"
-                    disabled={isParsing}
-                  />
-                  <CardContent className="pt-8 pb-8 text-center relative">
-                    <div className="w-20 h-20 bg-primary text-primary-foreground rounded-2xl flex items-center justify-center mx-auto mb-6">
-                      {isParsing ? (
-                        <Loader2 className="w-10 h-10 animate-spin" />
-                      ) : (
-                        <Upload className="w-10 h-10" />
-                      )}
-                    </div>
-                    <h3 className="text-xl font-semibold mb-2">Upload Resume</h3>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      {isParsing ? 'AI is parsing your resume...' : 'Let AI extract your details automatically'}
-                    </p>
-                    <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-medium">
-                      <FileText className="w-4 h-4" />
-                      Choose File
-                    </div>
-                    <p className="mt-4 text-xs text-muted-foreground">PDF, DOC, DOCX, or TXT (max 5MB)</p>
-                  </CardContent>
-                </Card>
-              </label>
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <label htmlFor="resume-upload">
+                  <Card className={`cursor-pointer border-2 border-dashed transition-all duration-300 relative overflow-hidden group h-full ${isParsing ? 'pointer-events-none opacity-70' : ''} ${isDragging ? 'border-primary bg-primary/5 scale-[1.02]' : 'border-border hover:border-primary/50'}`}>
+                    <input
+                      id="resume-upload"
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt"
+                      onChange={handleResumeUpload}
+                      className="sr-only"
+                      disabled={isParsing}
+                    />
+                    <CardContent className="pt-8 pb-8 text-center relative">
+                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 transition-all duration-300 ${isDragging ? 'bg-primary scale-110' : 'bg-primary'} text-primary-foreground`}>
+                        {isParsing ? (
+                          <Loader2 className="w-10 h-10 animate-spin" />
+                        ) : (
+                          <Upload className={`w-10 h-10 transition-transform duration-300 ${isDragging ? 'animate-bounce' : ''}`} />
+                        )}
+                      </div>
+                      <h3 className="text-xl font-semibold mb-2">
+                        {isDragging ? 'Drop your resume here' : 'Upload Resume'}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        {isParsing ? 'AI is parsing your resume...' : isDragging ? 'Release to upload' : 'Drag & drop or click to upload'}
+                      </p>
+                      <div className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${isDragging ? 'bg-primary/20 text-primary' : 'bg-primary text-primary-foreground'}`}>
+                        <FileText className="w-4 h-4" />
+                        {isDragging ? 'Drop File' : 'Choose File'}
+                      </div>
+                      <p className="mt-4 text-xs text-muted-foreground">PDF, DOC, DOCX, or TXT (max 5MB)</p>
+                    </CardContent>
+                  </Card>
+                </label>
+              </div>
 
               <Card 
                 className="cursor-pointer border hover:border-primary/50 transition-all duration-300 group h-full"

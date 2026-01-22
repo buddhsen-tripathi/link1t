@@ -1,13 +1,9 @@
-import { CallToAction } from "@/components/CallToAction";
-import { Features } from "@/components/Features";
-import { Hero } from "@/components/Hero";
+import { Hero } from "@/components/landing/Hero";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col">
+    <main>
       <Hero />
-      <Features />
-      <CallToAction />
     </main>
   );
 }

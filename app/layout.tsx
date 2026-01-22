@@ -1,26 +1,37 @@
 import { ThemeProvider } from "next-themes";
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Inter } from "next/font/google";
+import { Amiko, Adamina, Chivo_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 
-const inter = Inter({ 
+const amiko = Amiko({
   subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
+  weight: ["400", "600", "700"],
+  variable: "--font-amiko",
+});
+
+const adamina = Adamina({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-adamina",
+});
+
+const chivoMono = Chivo_Mono({
+  subsets: ["latin"],
+  variable: "--font-chivo-mono",
 });
 
 export const metadata: Metadata = {
-  title: "Link1t - Instant Developer Portfolio Generator",
+  title: "Link1t - Portfolio Generator",
   description:
-    "Create a stunning developer portfolio in seconds. Upload your resume, let AI do the work, and get a shareable link to impress recruiters.",
+    "Create a professional developer portfolio. Add your details once, preview multiple themes, share one link.",
   keywords: ["portfolio", "developer", "resume", "AI", "generator", "career"],
-  authors: [{ name: "Link1t Team" }],
+  authors: [{ name: "Buddhsen Tripathi" }],
   openGraph: {
-    title: "Link1t - Instant Developer Portfolio Generator",
-    description: "Create a stunning developer portfolio in seconds",
+    title: "Link1t - Portfolio Generator",
+    description: "Create a professional developer portfolio. Add your details once, preview multiple themes, share one link.",
     type: "website",
   },
 };
@@ -29,12 +40,12 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={inter.variable}>
-      <body className={`${inter.className} antialiased`}>
+    <html lang="en" suppressHydrationWarning className={`${amiko.variable} ${adamina.variable} ${chivoMono.variable}`}>
+      <body className="font-sans antialiased">
         <ClerkProvider>
-          <ThemeProvider 
-            attribute="class" 
-            defaultTheme="dark" 
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
             enableSystem={false}
             disableTransitionOnChange
           >
