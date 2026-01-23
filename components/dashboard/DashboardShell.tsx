@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PortfolioForm } from "./PortfolioForm";
 import { PreviewPanel } from "./PreviewPanel";
 import { ResumeUploader } from "./ResumeUploader";
+import { PublishBar } from "./PublishBar";
 import type { PortfolioData, ThemeId } from "@/types/portfolio";
 
 interface DashboardShellProps {
@@ -14,6 +15,15 @@ interface DashboardShellProps {
   onDataChange: (data: PortfolioData) => void;
   selectedTheme: ThemeId;
   onThemeChange: (theme: ThemeId) => void;
+  // Save/Publish props
+  username: string;
+  onUsernameChange: (username: string) => void;
+  isPublished: boolean;
+  onPublishChange: (published: boolean) => void;
+  isSaving: boolean;
+  isDirty: boolean;
+  lastSaved: Date | null;
+  onSave: () => void;
 }
 
 export function DashboardShell({
@@ -21,6 +31,14 @@ export function DashboardShell({
   onDataChange,
   selectedTheme,
   onThemeChange,
+  username,
+  onUsernameChange,
+  isPublished,
+  onPublishChange,
+  isSaving,
+  isDirty,
+  lastSaved,
+  onSave,
 }: DashboardShellProps) {
   return (
     <div className="flex flex-col h-screen">
@@ -103,6 +121,18 @@ export function DashboardShell({
           />
         </div>
       </div>
+
+      {/* Footer - Publish bar */}
+      <PublishBar
+        username={username}
+        onUsernameChange={onUsernameChange}
+        isPublished={isPublished}
+        onPublishChange={onPublishChange}
+        isSaving={isSaving}
+        isDirty={isDirty}
+        lastSaved={lastSaved}
+        onSave={onSave}
+      />
     </div>
   );
 }

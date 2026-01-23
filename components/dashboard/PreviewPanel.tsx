@@ -20,6 +20,14 @@ export function PreviewPanel({
 }: PreviewPanelProps) {
   const ThemeComponent = themes[selectedTheme];
 
+  const openFullPreview = () => {
+    // Store data in sessionStorage for the preview page
+    sessionStorage.setItem("previewData", JSON.stringify(data));
+    sessionStorage.setItem("previewTheme", selectedTheme);
+    // Open in new tab
+    window.open("/preview", "_blank");
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -41,7 +49,12 @@ export function PreviewPanel({
             ))}
           </SelectContent>
         </Select>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button
+          variant="secondary"
+          size="sm"
+          className="gap-2"
+          onClick={openFullPreview}
+        >
           <ExternalLink className="w-4 h-4" />
           <span className="hidden sm:inline">Full Preview</span>
         </Button>
@@ -50,7 +63,7 @@ export function PreviewPanel({
       {/* Preview area */}
       <div className="flex-1 overflow-auto p-4">
         <div className="relative w-full">
-          <ThemeWrapper>
+          <ThemeWrapper scale={0.35}>
             <ThemeComponent data={data} isPreview />
           </ThemeWrapper>
         </div>
