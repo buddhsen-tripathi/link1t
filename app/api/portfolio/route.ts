@@ -112,15 +112,28 @@ export async function PUT(request: Request) {
     const cookieStore = await cookies();
     const supabase = createClient(cookieStore);
 
-    // Get user
-    const { data: user } = await supabase
+    // Get or create user
+    let { data: user } = await supabase
       .from("users")
       .select("*")
       .eq("clerk_id", userId)
       .single();
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      const { data: newUser, error: createError } = await supabase
+        .from("users")
+        .insert({ clerk_id: userId, email: "" })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error("Error creating user:", createError);
+        return NextResponse.json(
+          { error: "Failed to create user" },
+          { status: 500 }
+        );
+      }
+      user = newUser;
     }
 
     // Update username if provided

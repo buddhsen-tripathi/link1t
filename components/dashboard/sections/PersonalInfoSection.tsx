@@ -1,10 +1,9 @@
 "use client";
 
-import { useRef } from "react";
-import { Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { Upload, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import type { Portfolio } from "@/types/portfolio";
 
 interface PersonalInfoSectionProps {
@@ -14,15 +13,41 @@ interface PersonalInfoSectionProps {
 
 export function PersonalInfoSection({ portfolio, onChange }: PersonalInfoSectionProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // For now, create a local preview URL
-    // TODO: Replace with actual R2 upload
-    const previewUrl = URL.createObjectURL(file);
-    onChange({ profileImageUrl: previewUrl });
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Upload failed");
+      }
+
+      onChange({ profileImageUrl: result.url });
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadError(error instanceof Error ? error.message : "Upload failed");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   const removeImage = () => {
@@ -48,16 +73,23 @@ export function PersonalInfoSection({ portfolio, onChange }: PersonalInfoSection
               <button
                 onClick={removeImage}
                 className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={isUploading}
               >
                 <X className="w-3 h-3" />
               </button>
             </div>
           ) : (
             <div
-              onClick={() => fileInputRef.current?.click()}
-              className="w-20 h-20 border border-dashed border-border flex items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => !isUploading && fileInputRef.current?.click()}
+              className={`w-20 h-20 border border-dashed border-border flex items-center justify-center transition-colors ${
+                isUploading ? "cursor-not-allowed bg-muted/30" : "cursor-pointer hover:bg-muted/50"
+              }`}
             >
-              <Upload className="w-6 h-6 text-muted-foreground" />
+              {isUploading ? (
+                <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
+              ) : (
+                <Upload className="w-6 h-6 text-muted-foreground" />
+              )}
             </div>
           )}
           <input
@@ -66,10 +98,14 @@ export function PersonalInfoSection({ portfolio, onChange }: PersonalInfoSection
             accept="image/*"
             onChange={handleImageUpload}
             className="hidden"
+            disabled={isUploading}
           />
           <div className="text-sm text-muted-foreground">
-            <p>Upload a profile photo</p>
+            <p>{isUploading ? "Uploading..." : "Upload a profile photo"}</p>
             <p>JPG, PNG up to 5MB</p>
+            {uploadError && (
+              <p className="text-destructive mt-1">{uploadError}</p>
+            )}
           </div>
         </div>
       </div>
