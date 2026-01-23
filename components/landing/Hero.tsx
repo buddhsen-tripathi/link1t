@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button"
 import { useUser } from "@clerk/nextjs"
 import { ArrowUpRight, Star } from "lucide-react"
 
-export function Hero() {
+interface HeroProps {
+  onOpenLogin: () => void
+}
+
+export function Hero({ onOpenLogin }: HeroProps) {
   const { isSignedIn, isLoaded } = useUser()
 
   return (
@@ -42,12 +46,19 @@ export function Hero() {
 
           {/* CTA Buttons */}
           <div className="mt-4 flex flex-row gap-4 px-6">
-            <Button asChild className="gap-2">
-              <Link href="/generator">
-                <span>{isLoaded && isSignedIn ? "Edit Portfolio" : "Get Started"}</span>
-                <ArrowUpRight className="w-4 h-4 -rotate-0" />
-              </Link>
-            </Button>
+            {isLoaded && isSignedIn ? (
+              <Button asChild className="gap-2">
+                <Link href="/dashboard">
+                  <span>Edit Portfolio</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </Button>
+            ) : (
+              <Button className="gap-2" onClick={onOpenLogin}>
+                <span>Get Started</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </Button>
+            )}
             <Button asChild variant="secondary" className="gap-2">
               <a
                 href="https://github.com/Buddhsen-tripathi/link1t"
