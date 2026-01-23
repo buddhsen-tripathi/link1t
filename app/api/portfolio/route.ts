@@ -50,6 +50,7 @@ export async function GET() {
       return NextResponse.json({
         data: null,
         username: user.username,
+        usernameChangedAt: user.username_changed_at,
       });
     }
 
@@ -152,7 +153,11 @@ export async function GET() {
       })),
     };
 
-    return NextResponse.json({ data, username: user.username });
+    return NextResponse.json({
+      data,
+      username: user.username,
+      usernameChangedAt: user.username_changed_at,
+    });
   } catch (error) {
     console.error("Error fetching portfolio:", error);
     return NextResponse.json(
@@ -186,6 +191,25 @@ export async function PUT(request: Request) {
 
     // Update username if provided
     if (body.username !== undefined && body.username !== user.username) {
+      // Check 30-day restriction (only if user already has a username)
+      if (user.username && user.username_changed_at) {
+        const lastChanged = new Date(user.username_changed_at);
+        const now = new Date();
+        const daysSinceChange = Math.floor(
+          (now.getTime() - lastChanged.getTime()) / (1000 * 60 * 60 * 24)
+        );
+
+        if (daysSinceChange < 30) {
+          const daysRemaining = 30 - daysSinceChange;
+          return NextResponse.json(
+            {
+              error: `Username can only be changed once every 30 days. You can change it again in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}.`,
+            },
+            { status: 400 }
+          );
+        }
+      }
+
       // Check if username is taken
       const { data: existingUser } = await supabase
         .from("users")
@@ -202,7 +226,11 @@ export async function PUT(request: Request) {
 
       await supabase
         .from("users")
-        .update({ username: body.username, updated_at: new Date().toISOString() })
+        .update({
+          username: body.username,
+          username_changed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", user.id);
     }
 

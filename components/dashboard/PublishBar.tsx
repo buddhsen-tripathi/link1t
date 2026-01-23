@@ -18,6 +18,7 @@ import {
 interface PublishBarProps {
   username: string;
   onUsernameChange: (username: string) => void;
+  usernameChangedAt: string | null;
   isPublished: boolean;
   onPublishChange: (published: boolean) => void;
   isSaving: boolean;
@@ -29,6 +30,7 @@ interface PublishBarProps {
 export function PublishBar({
   username,
   onUsernameChange,
+  usernameChangedAt,
   isPublished,
   onPublishChange,
   isSaving,
@@ -39,8 +41,24 @@ export function PublishBar({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [tempUsername, setTempUsername] = useState(username);
   const [copied, setCopied] = useState(false);
+  const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
 
   const publicUrl = username ? `${window.location.origin}/${username}` : "";
+
+  // Calculate days until username can be changed
+  const getDaysUntilChange = () => {
+    if (!usernameChangedAt) return null;
+    const lastChanged = new Date(usernameChangedAt);
+    const now = new Date();
+    const daysSinceChange = Math.floor(
+      (now.getTime() - lastChanged.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    const daysRemaining = 30 - daysSinceChange;
+    return daysRemaining > 0 ? daysRemaining : null;
+  };
+
+  const daysUntilChange = getDaysUntilChange();
+  const isUsernameLocked = daysUntilChange !== null && username;
 
   const handleCopyLink = async () => {
     if (publicUrl) {
@@ -53,6 +71,16 @@ export function PublishBar({
   const handleSaveUsername = () => {
     onUsernameChange(tempUsername);
     setIsDialogOpen(false);
+    setShowUsernamePrompt(false);
+  };
+
+  const handleSaveClick = () => {
+    if (!username && isDirty) {
+      setShowUsernamePrompt(true);
+      setIsDialogOpen(true);
+    } else {
+      onSave();
+    }
   };
 
   const formatLastSaved = (date: Date) => {
@@ -73,7 +101,7 @@ export function PublishBar({
         <Button
           variant="secondary"
           size="sm"
-          onClick={onSave}
+          onClick={handleSaveClick}
           disabled={isSaving || !isDirty}
           className="gap-2"
         >
@@ -111,38 +139,67 @@ export function PublishBar({
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Public URL</DialogTitle>
+              <DialogTitle>
+                {showUsernamePrompt ? "Set Your Username" : "Public URL"}
+              </DialogTitle>
               <DialogDescription>
-                Choose a unique username for your portfolio URL
+                {showUsernamePrompt
+                  ? "Please set a username before saving your portfolio"
+                  : "Choose a unique username for your portfolio URL"}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label>Username</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">link1t.com/</span>
-                  <Input
-                    value={tempUsername}
-                    onChange={(e) =>
-                      setTempUsername(
-                        e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")
-                      )
-                    }
-                    placeholder="your-name"
-                    className="flex-1"
-                  />
+              {isUsernameLocked ? (
+                <div className="p-3 bg-muted rounded-md">
+                  <p className="text-sm font-medium">Username locked</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You can change your username again in {daysUntilChange} day
+                    {daysUntilChange === 1 ? "" : "s"}.
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Only lowercase letters, numbers, and hyphens allowed
-                </p>
-              </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    <Label>Username</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">link1t.com/</span>
+                      <Input
+                        value={tempUsername}
+                        onChange={(e) =>
+                          setTempUsername(
+                            e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")
+                          )
+                        }
+                        placeholder="your-name"
+                        className="flex-1"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Only lowercase letters, numbers, and hyphens allowed
+                    </p>
+                  </div>
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-md">
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      ⚠️ Username can only be changed once every 30 days
+                    </p>
+                  </div>
+                </>
+              )}
               <div className="flex justify-end gap-2">
-                <Button variant="secondary" onClick={() => setIsDialogOpen(false)}>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setShowUsernamePrompt(false);
+                  }}
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleSaveUsername} disabled={!tempUsername}>
-                  Save URL
-                </Button>
+                {!isUsernameLocked && (
+                  <Button onClick={handleSaveUsername} disabled={!tempUsername}>
+                    Save URL
+                  </Button>
+                )}
               </div>
             </div>
           </DialogContent>

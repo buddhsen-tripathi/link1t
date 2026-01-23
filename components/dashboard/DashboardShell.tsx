@@ -18,6 +18,7 @@ interface DashboardShellProps {
   // Save/Publish props
   username: string;
   onUsernameChange: (username: string) => void;
+  usernameChangedAt: string | null;
   isPublished: boolean;
   onPublishChange: (published: boolean) => void;
   isSaving: boolean;
@@ -33,6 +34,7 @@ export function DashboardShell({
   onThemeChange,
   username,
   onUsernameChange,
+  usernameChangedAt,
   isPublished,
   onPublishChange,
   isSaving,
@@ -126,6 +128,7 @@ export function DashboardShell({
       <PublishBar
         username={username}
         onUsernameChange={onUsernameChange}
+        usernameChangedAt={usernameChangedAt}
         isPublished={isPublished}
         onPublishChange={onPublishChange}
         isSaving={isSaving}

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   clerk_id TEXT UNIQUE NOT NULL,
   email TEXT,
   username VARCHAR(50) UNIQUE,
+  username_changed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
@@ -156,3 +157,6 @@ CREATE POLICY "Username lookup is public" ON users
 
 -- Allow service role full access (for API routes)
 -- The anon key with service_role bypass will handle authenticated operations
+
+-- Migration: Add username_changed_at column (run this if table already exists)
+-- ALTER TABLE users ADD COLUMN IF NOT EXISTS username_changed_at TIMESTAMPTZ;

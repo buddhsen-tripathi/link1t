@@ -49,6 +49,8 @@ export default function DashboardPage() {
 
   // Save/publish state
   const [username, setUsername] = useState("");
+  const [usernameChangedAt, setUsernameChangedAt] = useState<string | null>(null);
+  const serverUsername = useRef<string>("");
   const [isPublished, setIsPublished] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -73,11 +75,23 @@ export default function DashboardPage() {
             ? new Date(result.data.portfolio.updatedAt).getTime()
             : 0;
 
+          // Always load usernameChangedAt from server if available
+          if (result.usernameChangedAt) {
+            setUsernameChangedAt(result.usernameChangedAt);
+          }
+          if (result.username) {
+            setUsername(result.username);
+            serverUsername.current = result.username;
+          }
+
           // If we have a local draft that's newer than server data, use it
           if (draft && draft.savedAt > serverUpdatedAt) {
             setData(draft.data);
             setSelectedTheme(draft.selectedTheme);
-            setUsername(draft.username);
+            // Keep server username if draft has different one (avoid lockout issues)
+            if (!result.username) {
+              setUsername(draft.username);
+            }
             setIsPublished(draft.data.portfolio.isPublished || false);
             setHasLocalDraft(true);
             setIsDirty(true);
@@ -86,9 +100,6 @@ export default function DashboardPage() {
             setData(result.data);
             setSelectedTheme(result.data.portfolio.themeId || "brutalist");
             setIsPublished(result.data.portfolio.isPublished || false);
-            if (result.username) {
-              setUsername(result.username);
-            }
             setLastSaved(new Date());
             // Clear any stale local draft
             clearDraftFromStorage();
@@ -190,6 +201,8 @@ export default function DashboardPage() {
     if (isSaving) return;
 
     setIsSaving(true);
+    const isUsernameChanging = username !== serverUsername.current;
+
     try {
       const payload = {
         ...data,
@@ -212,6 +225,11 @@ export default function DashboardPage() {
         setLastSaved(new Date());
         setHasLocalDraft(false);
         clearDraftFromStorage();
+        // If username was set/changed, update usernameChangedAt and serverUsername
+        if (username && isUsernameChanging) {
+          setUsernameChangedAt(new Date().toISOString());
+          serverUsername.current = username;
+        }
       } else {
         const error = await response.json();
         console.error("Save failed:", error);
@@ -241,6 +259,7 @@ export default function DashboardPage() {
       onThemeChange={handleThemeChange}
       username={username}
       onUsernameChange={handleUsernameChange}
+      usernameChangedAt={usernameChangedAt}
       isPublished={isPublished}
       onPublishChange={handlePublishChange}
       isSaving={isSaving}

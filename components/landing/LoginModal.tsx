@@ -23,7 +23,7 @@ export function LoginModal({ open, onOpenChange }: LoginModalProps) {
     await signIn.authenticateWithRedirect({
       strategy: "oauth_google",
       redirectUrl: "/sso-callback",
-      redirectUrlComplete: "/",
+      redirectUrlComplete: "/dashboard",
     })
   }
 
