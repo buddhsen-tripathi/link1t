@@ -201,19 +201,7 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Handle publish toggle
-  const handlePublishChange = useCallback((published: boolean) => {
-    setIsPublished(published);
-    setData((prev) => ({
-      ...prev,
-      portfolio: { ...prev.portfolio, isPublished: published },
-    }));
-    if (!isInitialLoad.current) {
-      setIsDirty(true);
-    }
-  }, []);
-
-  // Save portfolio
+  // Save portfolio (keeps current publish state)
   const handleSave = useCallback(async () => {
     if (isSaving) return;
 
@@ -221,20 +209,18 @@ export default function DashboardPage() {
     const isUsernameChanging = username !== serverUsername.current;
 
     try {
-      const payload = {
-        ...data,
-        portfolio: {
-          ...data.portfolio,
-          themeId: selectedTheme,
-          isPublished,
-        },
-        username,
-      };
-
       const response = await fetch("/api/portfolio", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...data,
+          portfolio: {
+            ...data.portfolio,
+            themeId: selectedTheme,
+            isPublished, // Keep current state
+          },
+          username,
+        }),
       });
 
       if (response.ok) {
@@ -242,14 +228,12 @@ export default function DashboardPage() {
         setLastSaved(new Date());
         setHasLocalDraft(false);
         clearDraftFromStorage();
-        // If username was set/changed, update usernameChangedAt and serverUsername
         if (username && isUsernameChanging) {
           setUsernameChangedAt(new Date().toISOString());
           serverUsername.current = username;
         }
       } else {
         const error = await response.json();
-        console.error("Save failed:", error);
         alert(error.error || "Failed to save portfolio");
       }
     } catch (error) {
@@ -258,7 +242,52 @@ export default function DashboardPage() {
     } finally {
       setIsSaving(false);
     }
-  }, [data, selectedTheme, isPublished, username, isSaving]);
+  }, [data, selectedTheme, username, isSaving, isPublished]);
+
+  // Toggle publish state (publish if draft, unpublish if live)
+  const handleTogglePublish = useCallback(async () => {
+    if (isSaving) return;
+
+    const newPublishState = !isPublished;
+    setIsSaving(true);
+    const isUsernameChanging = username !== serverUsername.current;
+
+    try {
+      const response = await fetch("/api/portfolio", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          portfolio: {
+            ...data.portfolio,
+            themeId: selectedTheme,
+            isPublished: newPublishState,
+          },
+          username,
+        }),
+      });
+
+      if (response.ok) {
+        setIsDirty(false);
+        setLastSaved(new Date());
+        setHasLocalDraft(false);
+        setIsPublished(newPublishState);
+        clearDraftFromStorage();
+        if (username && isUsernameChanging) {
+          setUsernameChangedAt(new Date().toISOString());
+          serverUsername.current = username;
+        }
+      } else {
+        const error = await response.json();
+        alert(error.error || `Failed to ${newPublishState ? "publish" : "unpublish"}`);
+      }
+    } catch (error) {
+      console.error("Toggle publish failed:", error);
+      alert(`Failed to ${newPublishState ? "publish" : "unpublish"}`);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [data, selectedTheme, username, isSaving, isPublished]);
 
   // Save username only (for URL dialog)
   const handleSaveUsername = useCallback(async (newUsername: string) => {
@@ -274,7 +303,7 @@ export default function DashboardPage() {
         portfolio: {
           ...data.portfolio,
           themeId: selectedTheme,
-          isPublished,
+          isPublished: true, // Always publish when saving
         },
         username: newUsername,
       }),
@@ -286,6 +315,7 @@ export default function DashboardPage() {
       setLastSaved(new Date());
       setIsDirty(false);
       setHasLocalDraft(false);
+      setIsPublished(true); // Mark as published
       clearDraftFromStorage();
     } else {
       const error = await response.json();
@@ -327,11 +357,11 @@ export default function DashboardPage() {
       onUsernameChange={handleUsernameChange}
       usernameChangedAt={usernameChangedAt}
       isPublished={isPublished}
-      onPublishChange={handlePublishChange}
       isSaving={isSaving}
       isDirty={isDirty}
       lastSaved={lastSaved}
       onSave={handleSave}
+      onTogglePublish={handleTogglePublish}
       onSaveUsername={handleSaveUsername}
     />
   );

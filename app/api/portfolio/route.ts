@@ -202,8 +202,8 @@ export async function PUT(request: Request) {
       content,
       section_order: body.portfolio?.sectionOrder || DEFAULT_SECTION_ORDER,
       theme_id: body.portfolio?.themeId || "brutalist",
-      is_published: body.portfolio?.isPublished || false,
-      published_at: body.portfolio?.isPublished ? new Date().toISOString() : null,
+      is_published: body.portfolio?.isPublished !== false, // Default to published
+      published_at: body.portfolio?.isPublished !== false ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     };
 

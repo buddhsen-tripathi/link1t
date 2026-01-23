@@ -5,7 +5,6 @@ import { AlertCircle, Check, Copy, Globe, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -20,11 +19,11 @@ interface PublishBarProps {
   onUsernameChange: (username: string) => void;
   usernameChangedAt: string | null;
   isPublished: boolean;
-  onPublishChange: (published: boolean) => void;
   isSaving: boolean;
   isDirty: boolean;
   lastSaved: Date | null;
   onSave: () => void;
+  onTogglePublish: () => void;
   onSaveUsername: (username: string) => Promise<void>;
 }
 
@@ -33,11 +32,11 @@ export function PublishBar({
   onUsernameChange,
   usernameChangedAt,
   isPublished,
-  onPublishChange,
   isSaving,
   isDirty,
   lastSaved,
   onSave,
+  onTogglePublish,
   onSaveUsername,
 }: PublishBarProps) {
   // URL dialog state
@@ -130,7 +129,7 @@ export function PublishBar({
 
   return (
     <div className="h-14 border-t border-dashed border-border px-4 flex items-center justify-between bg-background shrink-0">
-      {/* Left side - Save status */}
+      {/* Left side - Save buttons */}
       <div className="flex items-center gap-3">
         {/* Save button with confirmation dialog */}
         <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
@@ -176,6 +175,22 @@ export function PublishBar({
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Publish/Unpublish button */}
+        <Button
+          variant={isPublished ? "destructive" : "default"}
+          size="sm"
+          onClick={onTogglePublish}
+          disabled={isSaving || !username}
+          className="gap-2"
+        >
+          {isSaving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Globe className="w-4 h-4" />
+          )}
+          {isPublished ? "Unpublish" : "Save & Publish"}
+        </Button>
 
         <span className="text-xs text-muted-foreground">
           {isSaving
@@ -324,18 +339,12 @@ export function PublishBar({
           </Button>
         )}
 
-        {/* Publish toggle */}
-        <div className="flex items-center gap-2">
-          <Label htmlFor="publish-toggle" className="text-sm">
-            {isPublished ? "Published" : "Draft"}
-          </Label>
-          <Switch
-            id="publish-toggle"
-            checked={isPublished}
-            onCheckedChange={onPublishChange}
-            disabled={!username}
-          />
-        </div>
+        {/* Status indicator */}
+        {username && (
+          <span className={`text-xs px-2 py-1 rounded ${isPublished ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"}`}>
+            {isPublished ? "Live" : "Draft"}
+          </span>
+        )}
       </div>
     </div>
   );

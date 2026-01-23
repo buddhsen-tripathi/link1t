@@ -20,11 +20,11 @@ interface DashboardShellProps {
   onUsernameChange: (username: string) => void;
   usernameChangedAt: string | null;
   isPublished: boolean;
-  onPublishChange: (published: boolean) => void;
   isSaving: boolean;
   isDirty: boolean;
   lastSaved: Date | null;
   onSave: () => void;
+  onTogglePublish: () => void;
   onSaveUsername: (username: string) => Promise<void>;
 }
 
@@ -37,11 +37,11 @@ export function DashboardShell({
   onUsernameChange,
   usernameChangedAt,
   isPublished,
-  onPublishChange,
   isSaving,
   isDirty,
   lastSaved,
   onSave,
+  onTogglePublish,
   onSaveUsername,
 }: DashboardShellProps) {
   return (
@@ -132,11 +132,11 @@ export function DashboardShell({
         onUsernameChange={onUsernameChange}
         usernameChangedAt={usernameChangedAt}
         isPublished={isPublished}
-        onPublishChange={onPublishChange}
         isSaving={isSaving}
         isDirty={isDirty}
         lastSaved={lastSaved}
         onSave={onSave}
+        onTogglePublish={onTogglePublish}
         onSaveUsername={onSaveUsername}
       />
     </div>
