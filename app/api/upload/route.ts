@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     // Upload to R2
     await r2Client.send(
       new PutObjectCommand({
-        Bucket: process.env.R2_IMAGE_BUCKET_NAME,
+        Bucket: process.env.R2_BUCKET_NAME,
         Key: key,
         Body: buffer,
         ContentType: file.type,
