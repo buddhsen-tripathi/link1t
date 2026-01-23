@@ -43,17 +43,56 @@ const PLATFORM_ICONS: Record<SocialPlatform, string> = {
 };
 
 const PLATFORM_PLACEHOLDERS: Record<SocialPlatform, string> = {
-  github: "https://github.com/username",
-  linkedin: "https://linkedin.com/in/username",
-  twitter: "https://twitter.com/username",
+  github: "username",
+  linkedin: "username",
+  twitter: "username",
   website: "https://yourwebsite.com",
-  dribbble: "https://dribbble.com/username",
-  behance: "https://behance.net/username",
-  youtube: "https://youtube.com/@username",
-  medium: "https://medium.com/@username",
-  devto: "https://dev.to/username",
-  instagram: "https://instagram.com/username",
+  dribbble: "username",
+  behance: "username",
+  youtube: "@username",
+  medium: "@username",
+  devto: "username",
+  instagram: "username",
 };
+
+// Base URLs for auto-completing usernames
+const PLATFORM_BASE_URLS: Record<SocialPlatform, string | null> = {
+  github: "https://github.com/",
+  linkedin: "https://linkedin.com/in/",
+  twitter: "https://twitter.com/",
+  website: null, // No auto-complete for custom websites
+  dribbble: "https://dribbble.com/",
+  behance: "https://behance.net/",
+  youtube: "https://youtube.com/",
+  medium: "https://medium.com/",
+  devto: "https://dev.to/",
+  instagram: "https://instagram.com/",
+};
+
+// Build full URL from username and platform
+function buildUrl(input: string, platform: SocialPlatform): string {
+  const trimmed = input.trim();
+  if (!trimmed) return "";
+
+  // Already a full URL
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+
+  // Has a dot - treat as domain, just add https
+  if (trimmed.includes(".")) {
+    return `https://${trimmed}`;
+  }
+
+  // Just a username - build full URL if platform supports it
+  const baseUrl = PLATFORM_BASE_URLS[platform];
+  if (baseUrl) {
+    return `${baseUrl}${trimmed}`;
+  }
+
+  // Website platform with no dot - add https
+  return `https://${trimmed}`;
+}
 
 interface SortableSocialLinkProps {
   link: SocialLink;
@@ -119,6 +158,12 @@ function SortableSocialLink({ link, availablePlatforms, onUpdate, onRemove }: So
           <Input
             value={link.url}
             onChange={(e) => onUpdate(link.id, { url: e.target.value })}
+            onBlur={(e) => {
+              const fullUrl = buildUrl(e.target.value, link.platform);
+              if (fullUrl && fullUrl !== link.url) {
+                onUpdate(link.id, { url: fullUrl });
+              }
+            }}
             placeholder={PLATFORM_PLACEHOLDERS[link.platform]}
             className="flex-1"
           />
