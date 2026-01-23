@@ -25,6 +25,7 @@ interface DashboardShellProps {
   isDirty: boolean;
   lastSaved: Date | null;
   onSave: () => void;
+  onSaveUsername: (username: string) => Promise<void>;
 }
 
 export function DashboardShell({
@@ -41,6 +42,7 @@ export function DashboardShell({
   isDirty,
   lastSaved,
   onSave,
+  onSaveUsername,
 }: DashboardShellProps) {
   return (
     <div className="flex flex-col h-screen">
@@ -135,6 +137,7 @@ export function DashboardShell({
         isDirty={isDirty}
         lastSaved={lastSaved}
         onSave={onSave}
+        onSaveUsername={onSaveUsername}
       />
     </div>
   );

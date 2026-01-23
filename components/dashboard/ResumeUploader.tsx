@@ -5,7 +5,7 @@ import { Upload, FileText, Loader2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useResumeParser } from "@/hooks/useResumeParser";
-import { generateId, type PortfolioData, type Experience, type Education, type Skill, type SocialLink, type SocialPlatform } from "@/types/portfolio";
+import { generateId, DEFAULT_SECTION_ORDER, type PortfolioData, type Experience, type Education, type Skill, type SocialLink, type SocialPlatform } from "@/types/portfolio";
 
 interface ResumeUploaderProps {
   onApply: (data: Partial<PortfolioData>) => void;
@@ -54,6 +54,7 @@ export function ResumeUploader({ onApply }: ResumeUploaderProps) {
         profileImageUrl: "",
         bio: parsedData.bio || "",
         themeId: "brutalist",
+        sectionOrder: DEFAULT_SECTION_ORDER,
         isPublished: false,
         publishedAt: null,
         createdAt: new Date(),

@@ -7,6 +7,8 @@ export interface User {
   updatedAt: Date;
 }
 
+export type SectionKey = 'experiences' | 'education' | 'projects' | 'skills' | 'socialLinks';
+
 export interface Portfolio {
   id: string;
   userId: string;
@@ -18,6 +20,7 @@ export interface Portfolio {
   profileImageUrl: string;
   bio: string;
   themeId: ThemeId;
+  sectionOrder: SectionKey[];
   isPublished: boolean;
   publishedAt: Date | null;
   createdAt: Date;
@@ -129,6 +132,8 @@ export const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string }[] = [
   { value: 'instagram', label: 'Instagram' },
 ];
 
+export const DEFAULT_SECTION_ORDER: SectionKey[] = ['experiences', 'education', 'projects', 'skills', 'socialLinks'];
+
 export function createEmptyPortfolio(): PortfolioData {
   return {
     portfolio: {
@@ -142,6 +147,7 @@ export function createEmptyPortfolio(): PortfolioData {
       profileImageUrl: '',
       bio: '',
       themeId: 'brutalist',
+      sectionOrder: DEFAULT_SECTION_ORDER,
       isPublished: false,
       publishedAt: null,
       createdAt: new Date(),

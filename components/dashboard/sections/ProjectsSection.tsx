@@ -2,10 +2,28 @@
 
 import { useState } from "react";
 import { Plus, Trash2, GripVertical, X } from "lucide-react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { generateId, type Project } from "@/types/portfolio";
 
 interface ProjectsSectionProps {
@@ -13,8 +31,171 @@ interface ProjectsSectionProps {
   onChange: (projects: Project[]) => void;
 }
 
+interface SortableProjectProps {
+  proj: Project;
+  index: number;
+  techInput: string;
+  onTechInputChange: (value: string) => void;
+  onUpdate: (id: string, updates: Partial<Project>) => void;
+  onRemove: (id: string) => void;
+  onAddTechnology: () => void;
+  onRemoveTechnology: (tech: string) => void;
+}
+
+function SortableProject({
+  proj,
+  index,
+  techInput,
+  onTechInputChange,
+  onUpdate,
+  onRemove,
+  onAddTechnology,
+  onRemoveTechnology,
+}: SortableProjectProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: proj.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  const handleTechKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      onAddTechnology();
+    }
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "border border-border p-4 space-y-4 bg-background",
+        isDragging && "opacity-50 z-50"
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+            aria-label="Drag to reorder"
+          >
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <span className="text-sm font-medium">
+            Project {index + 1}
+          </span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onRemove(proj.id)}
+          className="text-destructive hover:text-destructive"
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Project Name *</Label>
+        <Input
+          value={proj.name}
+          onChange={(e) => onUpdate(proj.id, { name: e.target.value })}
+          placeholder="My Awesome Project"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Description</Label>
+        <Textarea
+          value={proj.description}
+          onChange={(e) => onUpdate(proj.id, { description: e.target.value })}
+          placeholder="Brief description of the project..."
+          className="min-h-[80px]"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Live URL</Label>
+          <Input
+            type="url"
+            value={proj.url}
+            onChange={(e) => onUpdate(proj.id, { url: e.target.value })}
+            placeholder="https://myproject.com"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>GitHub URL</Label>
+          <Input
+            type="url"
+            value={proj.githubUrl}
+            onChange={(e) => onUpdate(proj.id, { githubUrl: e.target.value })}
+            placeholder="https://github.com/user/repo"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Technologies</Label>
+        <div className="flex gap-2">
+          <Input
+            value={techInput}
+            onChange={(e) => onTechInputChange(e.target.value)}
+            onKeyDown={handleTechKeyDown}
+            placeholder="Add technology and press Enter"
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onAddTechnology}
+          >
+            Add
+          </Button>
+        </div>
+        {proj.technologies.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {proj.technologies.map((tech) => (
+              <span
+                key={tech}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-muted border border-border"
+              >
+                {tech}
+                <button
+                  onClick={() => onRemoveTechnology(tech)}
+                  className="hover:text-destructive"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function ProjectsSection({ projects, onChange }: ProjectsSectionProps) {
   const [techInput, setTechInput] = useState<Record<string, string>>({});
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const addProject = () => {
     const newProject: Project = {
@@ -65,13 +246,18 @@ export function ProjectsSection({ projects, onChange }: ProjectsSectionProps) {
     }
   };
 
-  const handleTechKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    projectId: string
-  ) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addTechnology(projectId);
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = projects.findIndex((proj) => proj.id === active.id);
+      const newIndex = projects.findIndex((proj) => proj.id === over.id);
+
+      const newOrder = arrayMove(projects, oldIndex, newIndex).map((proj, idx) => ({
+        ...proj,
+        displayOrder: idx,
+      }));
+      onChange(newOrder);
     }
   };
 
@@ -87,120 +273,32 @@ export function ProjectsSection({ projects, onChange }: ProjectsSectionProps) {
         </div>
       ) : (
         <>
-          {projects.map((proj, index) => (
-            <div
-              key={proj.id}
-              className="border border-border p-4 space-y-4"
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={projects.map((proj) => proj.id)}
+              strategy={verticalListSortingStrategy}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
-                  <span className="text-sm font-medium">
-                    Project {index + 1}
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeProject(proj.id)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Project Name *</Label>
-                <Input
-                  value={proj.name}
-                  onChange={(e) =>
-                    updateProject(proj.id, { name: e.target.value })
+              {projects.map((proj, index) => (
+                <SortableProject
+                  key={proj.id}
+                  proj={proj}
+                  index={index}
+                  techInput={techInput[proj.id] || ""}
+                  onTechInputChange={(value) =>
+                    setTechInput((prev) => ({ ...prev, [proj.id]: value }))
                   }
-                  placeholder="My Awesome Project"
+                  onUpdate={updateProject}
+                  onRemove={removeProject}
+                  onAddTechnology={() => addTechnology(proj.id)}
+                  onRemoveTechnology={(tech) => removeTechnology(proj.id, tech)}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  value={proj.description}
-                  onChange={(e) =>
-                    updateProject(proj.id, { description: e.target.value })
-                  }
-                  placeholder="Brief description of the project..."
-                  className="min-h-[80px]"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Live URL</Label>
-                  <Input
-                    type="url"
-                    value={proj.url}
-                    onChange={(e) =>
-                      updateProject(proj.id, { url: e.target.value })
-                    }
-                    placeholder="https://myproject.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>GitHub URL</Label>
-                  <Input
-                    type="url"
-                    value={proj.githubUrl}
-                    onChange={(e) =>
-                      updateProject(proj.id, { githubUrl: e.target.value })
-                    }
-                    placeholder="https://github.com/user/repo"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Technologies</Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={techInput[proj.id] || ""}
-                    onChange={(e) =>
-                      setTechInput((prev) => ({
-                        ...prev,
-                        [proj.id]: e.target.value,
-                      }))
-                    }
-                    onKeyDown={(e) => handleTechKeyDown(e, proj.id)}
-                    placeholder="Add technology and press Enter"
-                  />
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => addTechnology(proj.id)}
-                  >
-                    Add
-                  </Button>
-                </div>
-                {proj.technologies.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {proj.technologies.map((tech) => (
-                      <span
-                        key={tech}
-                        className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-muted border border-border"
-                      >
-                        {tech}
-                        <button
-                          onClick={() => removeTechnology(proj.id, tech)}
-                          className="hover:text-destructive"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
+              ))}
+            </SortableContext>
+          </DndContext>
           <Button onClick={addProject} variant="secondary" size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Add Another Project

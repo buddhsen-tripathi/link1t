@@ -2,7 +2,8 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { themes } from "@/components/themes";
-import type { PortfolioData, ThemeId, SocialPlatform } from "@/types/portfolio";
+import { DEFAULT_SECTION_ORDER } from "@/types/portfolio";
+import type { PortfolioData, ThemeId } from "@/types/portfolio";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -26,7 +27,7 @@ async function getPortfolioByUsername(
     return null;
   }
 
-  // Get portfolio
+  // Get portfolio (now includes all content in JSONB)
   const { data: portfolio } = await supabase
     .from("portfolios")
     .select("*")
@@ -38,35 +39,14 @@ async function getPortfolioByUsername(
     return null;
   }
 
-  // Get related data
-  const [experiences, education, projects, skills, socialLinks] =
-    await Promise.all([
-      supabase
-        .from("experiences")
-        .select("*")
-        .eq("portfolio_id", portfolio.id)
-        .order("display_order"),
-      supabase
-        .from("education")
-        .select("*")
-        .eq("portfolio_id", portfolio.id)
-        .order("display_order"),
-      supabase
-        .from("projects")
-        .select("*")
-        .eq("portfolio_id", portfolio.id)
-        .order("display_order"),
-      supabase
-        .from("skills")
-        .select("*")
-        .eq("portfolio_id", portfolio.id)
-        .order("display_order"),
-      supabase
-        .from("social_links")
-        .select("*")
-        .eq("portfolio_id", portfolio.id)
-        .order("display_order"),
-    ]);
+  // Extract content from JSONB
+  const content = portfolio.content || {
+    experiences: [],
+    education: [],
+    projects: [],
+    skills: [],
+    socialLinks: [],
+  };
 
   // Transform database format to app format
   return {
@@ -81,60 +61,17 @@ async function getPortfolioByUsername(
       profileImageUrl: portfolio.profile_image_url || "",
       bio: portfolio.bio || "",
       themeId: (portfolio.theme_id || "brutalist") as ThemeId,
+      sectionOrder: portfolio.section_order || DEFAULT_SECTION_ORDER,
       isPublished: portfolio.is_published || false,
       publishedAt: portfolio.published_at,
       createdAt: portfolio.created_at,
       updatedAt: portfolio.updated_at,
     },
-    experiences: (experiences.data || []).map((exp) => ({
-      id: exp.id,
-      portfolioId: exp.portfolio_id,
-      company: exp.company,
-      position: exp.position,
-      location: exp.location || "",
-      startDate: exp.start_date || "",
-      endDate: exp.end_date || "",
-      isCurrent: exp.is_current || false,
-      description: exp.description || "",
-      displayOrder: exp.display_order || 0,
-    })),
-    education: (education.data || []).map((edu) => ({
-      id: edu.id,
-      portfolioId: edu.portfolio_id,
-      institution: edu.institution,
-      degree: edu.degree,
-      fieldOfStudy: edu.field_of_study || "",
-      startDate: edu.start_date || "",
-      endDate: edu.end_date || "",
-      description: edu.description || "",
-      displayOrder: edu.display_order || 0,
-    })),
-    projects: (projects.data || []).map((proj) => ({
-      id: proj.id,
-      portfolioId: proj.portfolio_id,
-      name: proj.name,
-      description: proj.description || "",
-      url: proj.url || "",
-      githubUrl: proj.github_url || "",
-      imageUrl: proj.image_url || "",
-      technologies: proj.technologies || [],
-      displayOrder: proj.display_order || 0,
-    })),
-    skills: (skills.data || []).map((skill) => ({
-      id: skill.id,
-      portfolioId: skill.portfolio_id,
-      name: skill.name,
-      category: skill.category || "",
-      proficiencyLevel: skill.proficiency_level || 3,
-      displayOrder: skill.display_order || 0,
-    })),
-    socialLinks: (socialLinks.data || []).map((link) => ({
-      id: link.id,
-      portfolioId: link.portfolio_id,
-      platform: link.platform as SocialPlatform,
-      url: link.url,
-      displayOrder: link.display_order || 0,
-    })),
+    experiences: content.experiences || [],
+    education: content.education || [],
+    projects: content.projects || [],
+    skills: content.skills || [],
+    socialLinks: content.socialLinks || [],
   };
 }
 

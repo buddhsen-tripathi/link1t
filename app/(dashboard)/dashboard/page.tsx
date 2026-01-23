@@ -156,6 +156,23 @@ export default function DashboardPage() {
     saveDraftToStorage(draft);
   }, [data, username, selectedTheme, isLoading]);
 
+  // Periodic auto-save to localStorage every 30 seconds
+  useEffect(() => {
+    if (isInitialLoad.current || isLoading) return;
+
+    const interval = setInterval(() => {
+      const draft: DraftData = {
+        data,
+        username,
+        selectedTheme,
+        savedAt: Date.now(),
+      };
+      saveDraftToStorage(draft);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [data, username, selectedTheme, isLoading]);
+
   // Handle data changes and mark as dirty
   const handleDataChange = useCallback((newData: PortfolioData) => {
     setData(newData);
@@ -243,6 +260,55 @@ export default function DashboardPage() {
     }
   }, [data, selectedTheme, isPublished, username, isSaving]);
 
+  // Save username only (for URL dialog)
+  const handleSaveUsername = useCallback(async (newUsername: string) => {
+    const isUsernameChanging = newUsername !== serverUsername.current;
+
+    if (!isUsernameChanging) return;
+
+    const response = await fetch("/api/portfolio", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...data,
+        portfolio: {
+          ...data.portfolio,
+          themeId: selectedTheme,
+          isPublished,
+        },
+        username: newUsername,
+      }),
+    });
+
+    if (response.ok) {
+      setUsernameChangedAt(new Date().toISOString());
+      serverUsername.current = newUsername;
+      setLastSaved(new Date());
+      setIsDirty(false);
+      setHasLocalDraft(false);
+      clearDraftFromStorage();
+    } else {
+      const error = await response.json();
+      throw new Error(error.error || "Failed to save username");
+    }
+  }, [data, selectedTheme, isPublished]);
+
+  // Keyboard shortcut for save (Cmd+S / Ctrl+S)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        // Trigger save if there are changes and username is set
+        if (isDirty && username && !isSaving) {
+          handleSave();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isDirty, username, isSaving, handleSave]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -266,6 +332,7 @@ export default function DashboardPage() {
       isDirty={isDirty}
       lastSaved={lastSaved}
       onSave={handleSave}
+      onSaveUsername={handleSaveUsername}
     />
   );
 }
