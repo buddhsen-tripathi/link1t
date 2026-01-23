@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useUser } from "@clerk/nextjs"
 import { ArrowUpRight, Star } from "lucide-react"
+import { GeometricBackground } from "./GeometricBackground"
 
 interface HeroProps {
   onOpenLogin: () => void
@@ -14,8 +15,8 @@ export function Hero({ onOpenLogin }: HeroProps) {
 
   return (
     <>
-      {/* Hero section - fills space between header and features */}
       <div className="relative flex h-[calc(100svh-64px-150px)] flex-row items-center overflow-hidden border-b border-dashed border-border">
+        <GeometricBackground />
         <div className="z-10 flex flex-col gap-4">
           {/* GitHub stars badge */}
           <div className="flex flex-row items-center gap-2 px-6">
@@ -28,10 +29,6 @@ export function Hero({ onOpenLogin }: HeroProps) {
               <Star className="size-4 text-yellow-500 fill-yellow-500" />
               <span className="text-sm font-semibold">Star</span>
             </a>
-            <div className="flex flex-row items-center">
-              <div className="h-1.5 w-1.5 border border-border bg-muted/20"></div>
-              <div className="h-px w-40 bg-gradient-to-r from-border to-transparent"></div>
-            </div>
           </div>
 
           {/* Headline */}
@@ -75,7 +72,7 @@ export function Hero({ onOpenLogin }: HeroProps) {
         </div>
       </div>
 
-      {/* Features section - fixed height */}
+      {/* Features section */}
       <div className="grid grid-flow-row sm:h-[150px] sm:grid-cols-3">
         <div className="flex h-40 flex-col gap-3 border-b border-dashed border-border p-4 sm:h-auto">
           <h3 className="font-medium text-foreground">Beautiful</h3>
