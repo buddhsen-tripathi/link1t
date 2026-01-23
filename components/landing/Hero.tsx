@@ -9,74 +9,82 @@ export function Hero() {
   const { isSignedIn, isLoaded } = useUser()
 
   return (
-    <section className="min-h-[calc(100vh-3.5rem)] flex flex-col">
-      <div className="flex-1 flex items-center">
-        <div className="container px-6 md:px-8 max-w-4xl mx-auto py-16">
-          {/* Content with grid layout */}
-          <div className="border border-border" style={{ borderStyle: 'dashed' }}>
-            {/* Top row - label and badge */}
-            <div className="flex items-center justify-between px-8 py-6 border-b border-border" style={{ borderStyle: 'dashed' }}>
-              <div className="flex items-center gap-4">
-                <div className="h-px w-6 bg-border" />
-                <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">
-                  Portfolio Generator
-                </span>
-              </div>
+    <>
+      {/* Hero section - fills space between header and features */}
+      <div className="relative flex h-[calc(100svh-64px-150px)] flex-row items-center overflow-hidden border-b border-dashed border-border">
+        <div className="z-10 flex flex-col gap-4">
+          {/* GitHub stars badge */}
+          <div className="flex flex-row items-center gap-2 px-6">
+            <a
+              href="https://github.com/Buddhsen-tripathi/link1t"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative flex h-7 items-center gap-2 border border-border bg-muted/20 px-2"
+            >
+              <Star className="size-4 text-yellow-500 fill-yellow-500" />
+              <span className="text-sm font-semibold">Star</span>
+            </a>
+            <div className="flex flex-row items-center">
+              <div className="h-1.5 w-1.5 border border-border bg-muted/20"></div>
+              <div className="h-px w-40 bg-gradient-to-r from-border to-transparent"></div>
+            </div>
+          </div>
+
+          {/* Headline */}
+          <div className="flex flex-col gap-2 px-6 font-serif text-5xl md:text-6xl">
+            <h1 className="text-muted-foreground">
+              Create <span className="text-foreground">Beautiful</span> Portfolios
+            </h1>
+            <h2 className="text-muted-foreground">
+              Not <span className="text-foreground">Boring</span> Ones
+            </h2>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="mt-4 flex flex-row gap-4 px-6">
+            <Button asChild className="gap-2">
+              <Link href="/generator">
+                <span>{isLoaded && isSignedIn ? "Edit Portfolio" : "Get Started"}</span>
+                <ArrowUpRight className="w-4 h-4 -rotate-0" />
+              </Link>
+            </Button>
+            <Button asChild variant="secondary" className="gap-2">
               <a
                 href="https://github.com/Buddhsen-tripathi/link1t"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3 py-1.5 border border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
               >
-                <Star className="w-4 h-4 fill-current" />
-                <span>Star on GitHub</span>
+                <span>Open Source</span>
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
               </a>
-            </div>
-
-            {/* Main content row */}
-            <div className="px-8 py-16 md:px-12 md:py-24 border-b border-border" style={{ borderStyle: 'dashed' }}>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif tracking-tight leading-[1.1] mb-8">
-                <span className="text-muted-foreground">Create</span>{" "}
-                <span className="text-foreground">Beautiful</span>{" "}
-                <span className="text-muted-foreground">Portfolios</span>
-                <br />
-                <span className="text-muted-foreground">Not</span>{" "}
-                <span className="text-foreground">Boring</span>{" "}
-                <span className="text-muted-foreground">Ones</span>
-              </h1>
-
-              <Button asChild size="lg" className="h-11 px-6 gap-2">
-                <Link href="/generator">
-                  {isLoaded && isSignedIn ? "Edit Portfolio" : "Get Started"}
-                  <ArrowUpRight className="w-4 h-4" />
-                </Link>
-              </Button>
-            </div>
-
-            {/* Features row - 3 columns */}
-            <div className="grid grid-cols-1 md:grid-cols-3">
-              <div className="px-8 py-8 md:border-r border-border" style={{ borderStyle: 'dashed' }}>
-                <h3 className="font-medium text-foreground mb-3">Beautiful</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Professionally designed themes that make your work stand out.
-                </p>
-              </div>
-              <div className="px-8 py-8 border-t md:border-t-0 md:border-r border-border" style={{ borderStyle: 'dashed' }}>
-                <h3 className="font-medium text-foreground mb-3">Free & Unlimited</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  No limits, no hidden costs. Just share your link.
-                </p>
-              </div>
-              <div className="px-8 py-8 border-t md:border-t-0">
-                <h3 className="font-medium text-foreground mb-3">AI-Powered</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Upload your resume and let AI do the rest.
-                </p>
-              </div>
-            </div>
+            </Button>
           </div>
         </div>
       </div>
-    </section>
+
+      {/* Features section - fixed height */}
+      <div className="grid grid-flow-row sm:h-[150px] sm:grid-cols-3">
+        <div className="flex h-40 flex-col gap-3 border-b border-dashed border-border p-4 sm:h-auto">
+          <h3 className="font-medium text-foreground">Beautiful</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Professionally designed themes that make your work stand out to recruiters and clients.
+          </p>
+        </div>
+        <div className="flex h-40 flex-col gap-3 border-b border-dashed border-border p-4 sm:h-auto sm:border-l">
+          <h3 className="font-medium text-foreground">Free & Unlimited</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Create as many portfolios as you need — no limits, no hidden costs, just share your link.
+          </p>
+        </div>
+        <div className="flex h-40 flex-col gap-3 border-b border-dashed border-border p-4 sm:h-auto sm:border-l">
+          <h3 className="font-medium text-foreground">AI-Powered</h3>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Upload your resume and let AI extract your experience, skills, and projects automatically.
+          </p>
+        </div>
+      </div>
+    </>
   )
 }

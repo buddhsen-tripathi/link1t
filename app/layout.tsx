@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Amiko, Adamina, Chivo_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/landing/Navbar";
-import { Footer } from "@/components/landing/Footer";
 
 const amiko = Amiko({
   subsets: ["latin"],
@@ -49,13 +47,7 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
-            <div className="relative min-h-screen flex flex-col">
-              <Navbar />
-              <main className="flex-1">
-                {children}
-              </main>
-              <Footer />
-            </div>
+            {children}
             <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "4fac4de58213481d98a2e09057316c38"}'></script>
           </ThemeProvider>
         </ClerkProvider>
