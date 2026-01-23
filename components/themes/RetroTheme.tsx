@@ -32,10 +32,9 @@ export function RetroTheme({ data }: RetroThemeProps) {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen bg-[#1a1a2e]"
       style={{
         fontFamily: "'Courier New', Courier, monospace",
-        background: "repeating-linear-gradient(0deg, #1a1a2e 0px, #1a1a2e 2px, #16213e 2px, #16213e 4px)",
       }}
     >
       {/* Stars background */}
@@ -58,32 +57,16 @@ export function RetroTheme({ data }: RetroThemeProps) {
         {/* Retro Header Banner */}
         <div className="text-center mb-8 relative">
           <div className="inline-block">
-            <div className="bg-gradient-to-r from-yellow-400 via-pink-500 to-cyan-400 p-1">
-              <div className="bg-[#1a1a2e] px-8 py-4">
-                <h1
-                  className="text-3xl md:text-4xl font-bold"
-                  style={{
-                    background: "linear-gradient(to right, #ff6b6b, #feca57, #48dbfb, #ff9ff3)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    textShadow: "0 0 30px rgba(255,107,107,0.5)",
-                  }}
-                >
-                  {portfolio.fullName || "YOUR NAME"}
-                </h1>
-                {portfolio.title && (
-                  <p className="text-cyan-400 mt-2 text-sm tracking-widest uppercase">
-                    {'>'} {portfolio.title} {'<'}
-                  </p>
-                )}
-              </div>
+            <div className="border-4 border-double border-cyan-400 bg-[#0f0f23] px-8 py-4">
+              <h1 className="text-3xl md:text-4xl font-bold text-yellow-400">
+                {portfolio.fullName || "YOUR NAME"}
+              </h1>
+              {portfolio.title && (
+                <p className="text-cyan-400 mt-2 text-sm tracking-widest uppercase">
+                  {'>'} {portfolio.title} {'<'}
+                </p>
+              )}
             </div>
-          </div>
-
-          {/* Visitor Counter (fake retro element) */}
-          <div className="mt-4 inline-flex items-center gap-2 text-xs text-green-400">
-            <span className="animate-pulse">●</span>
-            <span>VISITORS: 000{Math.floor(Math.random() * 9999)}</span>
           </div>
         </div>
 
@@ -161,7 +144,7 @@ export function RetroTheme({ data }: RetroThemeProps) {
             </h2>
             <div className="space-y-3">
               {education.map((edu) => (
-                <div key={edu.id} className="bg-gradient-to-r from-purple-900 to-blue-900 border border-purple-500 p-3 text-center">
+                <div key={edu.id} className="bg-purple-900 border-2 border-purple-500 p-3 text-center">
                   <h3 className="text-yellow-300">{edu.degree}</h3>
                   <p className="text-white">{edu.institution}</p>
                   {edu.fieldOfStudy && <p className="text-cyan-300 text-sm">{edu.fieldOfStudy}</p>}
@@ -265,7 +248,7 @@ export function RetroTheme({ data }: RetroThemeProps) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-3 bg-gradient-to-br from-purple-600 to-pink-600 text-white hover:from-pink-600 hover:to-purple-600 transition-all"
+                  className="p-3 bg-purple-600 text-white hover:bg-pink-600 transition-all"
                 >
                   <SocialIcon platform={link.platform} />
                 </a>

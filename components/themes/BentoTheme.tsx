@@ -32,46 +32,46 @@ export function BentoTheme({ data }: BentoThemeProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] p-4 md:p-8 font-sans">
+    <div className="min-h-screen bg-black p-4 md:p-6 font-sans">
       <div className="max-w-6xl mx-auto">
         {/* Bento Grid */}
-        <div className="grid grid-cols-4 md:grid-cols-6 gap-4 auto-rows-[120px]">
+        <div className="grid grid-cols-4 md:grid-cols-6 gap-2 auto-rows-[120px]">
           {/* Profile Card - Large */}
-          <div className="col-span-4 md:col-span-3 row-span-2 bg-white rounded-3xl p-6 flex flex-col justify-between shadow-sm">
+          <div className="col-span-4 md:col-span-3 row-span-2 bg-black border border-dashed border-white/20 p-6 flex flex-col justify-between text-white">
             <div className="flex items-start gap-4">
               {portfolio.profileImageUrl && (
                 <img
                   src={portfolio.profileImageUrl}
                   alt={portfolio.fullName}
-                  className="w-20 h-20 rounded-2xl object-cover"
+                  className="w-20 h-20 object-cover border border-dashed border-white/20"
                 />
               )}
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900">
+                <h1 className="text-2xl font-semibold">
                   {portfolio.fullName || "Your Name"}
                 </h1>
                 {portfolio.title && (
-                  <p className="text-gray-500">{portfolio.title}</p>
+                  <p className="text-white/60">{portfolio.title}</p>
                 )}
               </div>
             </div>
             {portfolio.bio && (
-              <p className="text-sm text-gray-600 line-clamp-3">{portfolio.bio}</p>
+              <p className="text-sm text-white/60 line-clamp-3">{portfolio.bio}</p>
             )}
           </div>
 
           {/* Contact Card */}
-          <div className="col-span-2 md:col-span-3 row-span-1 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl p-4 text-white shadow-sm">
-            <h2 className="text-sm font-medium opacity-80 mb-2">Contact</h2>
+          <div className="col-span-2 md:col-span-3 row-span-1 bg-black border border-dashed border-white/20 p-4 text-white">
+            <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-2">Contact</h2>
             <div className="space-y-1 text-sm">
               {portfolio.email && (
-                <a href={`mailto:${portfolio.email}`} className="flex items-center gap-2 hover:opacity-80">
+                <a href={`mailto:${portfolio.email}`} className="flex items-center gap-2 hover:text-white/80 text-white/60">
                   <Mail className="w-4 h-4" />
                   <span className="truncate">{portfolio.email}</span>
                 </a>
               )}
               {portfolio.location && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-white/60">
                   <MapPin className="w-4 h-4" />
                   <span>{portfolio.location}</span>
                 </div>
@@ -81,16 +81,16 @@ export function BentoTheme({ data }: BentoThemeProps) {
 
           {/* Social Links Card */}
           {socialLinks.length > 0 && (
-            <div className="col-span-2 md:col-span-3 row-span-1 bg-gray-900 rounded-3xl p-4 text-white shadow-sm">
-              <h2 className="text-sm font-medium opacity-60 mb-2">Social</h2>
-              <div className="flex gap-3">
+            <div className="col-span-2 md:col-span-3 row-span-1 bg-black border border-dashed border-white/20 p-4 text-white">
+              <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-2">Social</h2>
+              <div className="flex gap-2">
                 {socialLinks.slice(0, 4).map((link) => (
                   <a
                     key={link.id}
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 bg-white/10 rounded-xl hover:bg-white/20 transition-colors"
+                    className="p-2 border border-dashed border-white/20 hover:bg-white/10 transition-colors"
                   >
                     <SocialIcon platform={link.platform} />
                   </a>
@@ -101,16 +101,16 @@ export function BentoTheme({ data }: BentoThemeProps) {
 
           {/* Experience Card */}
           {experiences.length > 0 && (
-            <div className="col-span-4 md:col-span-4 row-span-2 bg-white rounded-3xl p-6 shadow-sm overflow-hidden">
-              <h2 className="text-sm font-medium text-gray-400 mb-4">Experience</h2>
+            <div className="col-span-4 md:col-span-4 row-span-2 bg-black border border-dashed border-white/20 p-6 overflow-hidden text-white">
+              <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-4">Experience</h2>
               <div className="space-y-4">
                 {experiences.slice(0, 3).map((exp) => (
                   <div key={exp.id} className="flex gap-4">
-                    <div className="w-2 h-2 mt-2 rounded-full bg-blue-500 shrink-0"></div>
+                    <div className="w-2 h-2 mt-2 bg-white shrink-0"></div>
                     <div>
-                      <h3 className="font-medium text-gray-900">{exp.position}</h3>
-                      <p className="text-sm text-gray-500">{exp.company}</p>
-                      <p className="text-xs text-gray-400">
+                      <h3 className="font-medium">{exp.position}</h3>
+                      <p className="text-sm text-white/60">{exp.company}</p>
+                      <p className="text-xs text-white/40">
                         {formatDate(exp.startDate)} — {exp.isCurrent ? "Present" : formatDate(exp.endDate)}
                       </p>
                     </div>
@@ -122,41 +122,39 @@ export function BentoTheme({ data }: BentoThemeProps) {
 
           {/* Skills Card */}
           {skills.length > 0 && (
-            <div className="col-span-4 md:col-span-2 row-span-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-3xl p-6 text-white shadow-sm">
-              <h2 className="text-sm font-medium opacity-80 mb-4">Skills</h2>
+            <div className="col-span-4 md:col-span-2 row-span-2 bg-black border border-dashed border-white/20 p-6 text-white">
+              <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-4">Skills</h2>
               <div className="flex flex-wrap gap-2">
                 {skills.slice(0, 8).map((skill) => (
                   <span
                     key={skill.id}
-                    className="text-xs bg-white/20 px-3 py-1.5 rounded-full"
+                    className="text-xs border border-dashed border-white/20 px-3 py-1.5"
                   >
                     {skill.name}
                   </span>
                 ))}
                 {skills.length > 8 && (
-                  <span className="text-xs opacity-60">+{skills.length - 8} more</span>
+                  <span className="text-xs text-white/40">+{skills.length - 8} more</span>
                 )}
               </div>
             </div>
           )}
 
           {/* Projects */}
-          {projects.slice(0, 2).map((project, index) => (
+          {projects.slice(0, 2).map((project) => (
             <div
               key={project.id}
-              className={`col-span-4 md:col-span-3 row-span-2 bg-white rounded-3xl p-6 shadow-sm flex flex-col justify-between ${
-                index === 1 ? "bg-gradient-to-br from-orange-400 to-red-500 text-white" : ""
-              }`}
+              className="col-span-4 md:col-span-3 row-span-2 bg-black border border-dashed border-white/20 p-6 flex flex-col justify-between text-white"
             >
               <div>
-                <h2 className={`text-sm font-medium mb-2 ${index === 1 ? "opacity-80" : "text-gray-400"}`}>
+                <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-2">
                   Project
                 </h2>
-                <h3 className={`text-xl font-semibold ${index === 1 ? "" : "text-gray-900"}`}>
+                <h3 className="text-xl font-semibold">
                   {project.name}
                 </h3>
                 {project.description && (
-                  <p className={`text-sm mt-2 line-clamp-2 ${index === 1 ? "opacity-90" : "text-gray-500"}`}>
+                  <p className="text-sm mt-2 line-clamp-2 text-white/60">
                     {project.description}
                   </p>
                 )}
@@ -167,9 +165,7 @@ export function BentoTheme({ data }: BentoThemeProps) {
                     href={project.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`p-2 rounded-xl transition-colors ${
-                      index === 1 ? "bg-white/20 hover:bg-white/30" : "bg-gray-100 hover:bg-gray-200"
-                    }`}
+                    className="p-2 border border-dashed border-white/20 hover:bg-white/10 transition-colors"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
@@ -179,9 +175,7 @@ export function BentoTheme({ data }: BentoThemeProps) {
                     href={project.githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`p-2 rounded-xl transition-colors ${
-                      index === 1 ? "bg-white/20 hover:bg-white/30" : "bg-gray-100 hover:bg-gray-200"
-                    }`}
+                    className="p-2 border border-dashed border-white/20 hover:bg-white/10 transition-colors"
                   >
                     <Github className="w-4 h-4" />
                   </a>
@@ -192,14 +186,14 @@ export function BentoTheme({ data }: BentoThemeProps) {
 
           {/* Education Card */}
           {education.length > 0 && (
-            <div className="col-span-4 md:col-span-6 row-span-1 bg-gradient-to-r from-green-400 to-cyan-500 rounded-3xl p-6 text-white shadow-sm">
+            <div className="col-span-4 md:col-span-6 row-span-1 bg-black border border-dashed border-white/20 p-6 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-medium opacity-80">Education</h2>
+                  <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide">Education</h2>
                   <h3 className="text-xl font-semibold mt-1">
                     {education[0].degree} in {education[0].fieldOfStudy}
                   </h3>
-                  <p className="opacity-80">{education[0].institution}</p>
+                  <p className="text-white/60">{education[0].institution}</p>
                 </div>
               </div>
             </div>
