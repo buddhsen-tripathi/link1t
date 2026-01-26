@@ -18,7 +18,8 @@ export function PreviewPanel({
   selectedTheme,
   onThemeChange,
 }: PreviewPanelProps) {
-  const ThemeComponent = themes[selectedTheme];
+  // Fallback to brutalist if theme doesn't exist (e.g., removed theme)
+  const ThemeComponent = themes[selectedTheme] || themes.brutalist;
 
   const openFullPreview = () => {
     // Store data in sessionStorage for the preview page
