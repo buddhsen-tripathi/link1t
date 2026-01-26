@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 interface ParsedResume {
   fullName?: string;
@@ -35,15 +35,38 @@ interface ParsedResume {
   }>;
 }
 
+interface RateLimitStatus {
+  remaining: number;
+  total: number;
+  resetInMinutes: number | null;
+  windowMinutes: number;
+}
+
 export function useResumeParser() {
   const [isParsing, setIsParsing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [parsedData, setParsedData] = useState<ParsedResume | null>(null);
+  const [rateLimit, setRateLimit] = useState<RateLimitStatus | null>(null);
+  const [isRateLimited, setIsRateLimited] = useState(false);
+
+  const fetchRateLimit = useCallback(async () => {
+    try {
+      const response = await fetch("/api/parse-resume");
+      if (response.ok) {
+        const data = await response.json();
+        setRateLimit(data);
+        setIsRateLimited(data.remaining === 0);
+      }
+    } catch {
+      // Silently fail - rate limit display is optional
+    }
+  }, []);
 
   const parseResume = async (file: File): Promise<ParsedResume | null> => {
     setIsParsing(true);
     setError(null);
     setParsedData(null);
+    setIsRateLimited(false);
 
     try {
       const formData = new FormData();
@@ -54,14 +77,34 @@ export function useResumeParser() {
         body: formData,
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
+        if (response.status === 429) {
+          setIsRateLimited(true);
+          setRateLimit({
+            remaining: 0,
+            total: 3,
+            resetInMinutes: data.resetInMinutes,
+            windowMinutes: 30
+          });
+        }
         throw new Error(data.error || "Failed to parse resume");
       }
 
-      const result: ParsedResume = await response.json();
-      setParsedData(result);
-      return result;
+      // Update rate limit from response
+      if (data._rateLimit) {
+        setRateLimit({
+          remaining: data._rateLimit.remaining,
+          total: 3,
+          resetInMinutes: data._rateLimit.resetInMinutes,
+          windowMinutes: 30
+        });
+        delete data._rateLimit;
+      }
+
+      setParsedData(data);
+      return data;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to parse resume";
       setError(message);
@@ -75,6 +118,7 @@ export function useResumeParser() {
     setIsParsing(false);
     setError(null);
     setParsedData(null);
+    setIsRateLimited(false);
   };
 
   return {
@@ -83,5 +127,8 @@ export function useResumeParser() {
     error,
     parsedData,
     reset,
+    rateLimit,
+    isRateLimited,
+    fetchRateLimit,
   };
 }

@@ -1,13 +1,94 @@
 import { auth } from "@clerk/nextjs/server";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/server";
 
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions";
+const RATE_LIMIT_MAX = 3;
+const RATE_LIMIT_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+
+// GET endpoint to check rate limit status
+export async function GET() {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    const { data: user } = await supabase
+      .from("users")
+      .select("ai_usage")
+      .eq("clerk_id", userId)
+      .single();
+
+    const now = Date.now();
+    const windowStart = now - RATE_LIMIT_WINDOW_MS;
+
+    let aiUsage: number[] = user?.ai_usage || [];
+    aiUsage = aiUsage.filter((timestamp: number) => timestamp > windowStart);
+
+    const remaining = Math.max(0, RATE_LIMIT_MAX - aiUsage.length);
+    const resetInMinutes = aiUsage.length > 0
+      ? Math.ceil((Math.min(...aiUsage) + RATE_LIMIT_WINDOW_MS - now) / 60000)
+      : null;
+
+    return NextResponse.json({
+      remaining,
+      total: RATE_LIMIT_MAX,
+      resetInMinutes,
+      windowMinutes: 30
+    });
+  } catch (error) {
+    console.error("Error checking rate limit:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check rate limit
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
+    // Get user's AI usage from the database
+    const { data: user } = await supabase
+      .from("users")
+      .select("ai_usage")
+      .eq("clerk_id", userId)
+      .single();
+
+    const now = Date.now();
+    const windowStart = now - RATE_LIMIT_WINDOW_MS;
+
+    // Parse existing usage or initialize empty array
+    let aiUsage: number[] = user?.ai_usage || [];
+
+    // Filter to only include timestamps within the window
+    aiUsage = aiUsage.filter((timestamp: number) => timestamp > windowStart);
+
+    // Check if rate limit exceeded
+    if (aiUsage.length >= RATE_LIMIT_MAX) {
+      const oldestUse = Math.min(...aiUsage);
+      const resetTime = oldestUse + RATE_LIMIT_WINDOW_MS;
+      const minutesUntilReset = Math.ceil((resetTime - now) / 60000);
+
+      return NextResponse.json(
+        {
+          error: `Rate limit exceeded. You can use AI parsing ${RATE_LIMIT_MAX} times per 30 minutes.`,
+          rateLimited: true,
+          remaining: 0,
+          resetInMinutes: minutesUntilReset
+        },
+        { status: 429 }
+      );
     }
 
     const formData = await request.formData();
@@ -139,7 +220,22 @@ Only return the JSON object, no other text. If a field cannot be determined, use
       jsonStr = jsonStr.trim();
 
       const parsed = JSON.parse(jsonStr);
-      return NextResponse.json(parsed);
+
+      // Track successful usage
+      aiUsage.push(now);
+      await supabase
+        .from("users")
+        .update({ ai_usage: aiUsage })
+        .eq("clerk_id", userId);
+
+      // Return parsed data with rate limit info
+      return NextResponse.json({
+        ...parsed,
+        _rateLimit: {
+          remaining: RATE_LIMIT_MAX - aiUsage.length,
+          resetInMinutes: aiUsage.length > 0 ? Math.ceil((Math.min(...aiUsage) + RATE_LIMIT_WINDOW_MS - now) / 60000) : 30
+        }
+      });
     } catch (parseError) {
       console.error("Failed to parse JSON response:", content);
       return NextResponse.json(

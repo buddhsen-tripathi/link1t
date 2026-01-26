@@ -63,7 +63,7 @@ export function PreviewPanel({
       {/* Preview area */}
       <div className="flex-1 overflow-auto p-4">
         <div className="relative w-full">
-          <ThemeWrapper scale={0.35}>
+          <ThemeWrapper scale={0.5}>
             <ThemeComponent data={data} isPreview />
           </ThemeWrapper>
         </div>

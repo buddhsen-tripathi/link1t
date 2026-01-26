@@ -1,4 +1,4 @@
-import { Github } from "lucide-react"
+import { Github, Heart } from "lucide-react"
 
 export function Footer() {
   const currentYear = new Date().getFullYear()
@@ -6,7 +6,7 @@ export function Footer() {
   return (
     <footer className="flex h-16 items-center justify-between px-4">
       <p className="text-xs text-muted-foreground">
-        {currentYear} Link1t. Built by{" "}
+        {currentYear} Link1t. Built with <Heart className="w-3 h-3 inline fill-red-500 text-red-500" /> by{" "}
         <a
           href="https://github.com/Buddhsen-tripathi"
           target="_blank"

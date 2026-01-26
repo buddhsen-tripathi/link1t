@@ -98,7 +98,7 @@ export function RetroTheme({ data }: RetroThemeProps) {
         )}
 
         {/* About Section */}
-        {portfolio.bio && (
+        {portfolio.bio?.trim() && (
           <div className="mb-8 border-4 border-double border-cyan-400 bg-[#0f0f23] p-4">
             <h2 className="text-yellow-400 text-center mb-4 text-lg">
               ★★★ ABOUT ME ★★★

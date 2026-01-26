@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Upload, FileText, Loader2, Check, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Upload, FileText, Loader2, Check, X, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useResumeParser } from "@/hooks/useResumeParser";
@@ -15,7 +15,14 @@ export function ResumeUploader({ onApply }: ResumeUploaderProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { parseResume, isParsing, error, parsedData, reset } = useResumeParser();
+  const { parseResume, isParsing, error, parsedData, reset, rateLimit, isRateLimited, fetchRateLimit } = useResumeParser();
+
+  // Fetch rate limit when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchRateLimit();
+    }
+  }, [isOpen, fetchRateLimit]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -148,9 +155,49 @@ export function ResumeUploader({ onApply }: ResumeUploaderProps) {
             </DialogDescription>
           </DialogHeader>
 
+          {/* Rate Limit Indicator */}
+          {rateLimit && (
+            <div className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm ${
+              rateLimit.remaining === 0
+                ? "bg-destructive/10 text-destructive"
+                : rateLimit.remaining === 1
+                ? "bg-yellow-500/10 text-yellow-600"
+                : "bg-muted text-muted-foreground"
+            }`}>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                <span>
+                  {rateLimit.remaining}/{rateLimit.total} AI uses remaining
+                </span>
+              </div>
+              {rateLimit.resetInMinutes !== null && rateLimit.remaining < rateLimit.total && (
+                <div className="flex items-center gap-1 text-xs">
+                  <Clock className="w-3 h-3" />
+                  <span>Resets in {rateLimit.resetInMinutes}m</span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="space-y-4">
+            {/* Rate Limited State */}
+            {isRateLimited && !selectedFile && (
+              <div className="border border-destructive/50 bg-destructive/5 rounded-lg p-6 text-center">
+                <Clock className="w-10 h-10 mx-auto text-destructive mb-3" />
+                <p className="font-medium text-destructive">Rate Limit Reached</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  You've used all 3 AI parses for this 30-minute window.
+                </p>
+                {rateLimit?.resetInMinutes && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Try again in <span className="font-medium">{rateLimit.resetInMinutes} minutes</span>.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Upload area */}
-            {!selectedFile && (
+            {!selectedFile && !isRateLimited && (
               <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
