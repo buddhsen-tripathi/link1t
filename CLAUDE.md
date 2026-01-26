@@ -125,4 +125,7 @@ R2_PUBLIC_URL=
 
 # OpenRouter (AI)
 OPENROUTER_API_KEY=
+
+# Analytics (optional)
+NEXT_PUBLIC_GA_ID=
 ```

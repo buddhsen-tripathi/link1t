@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useUser } from "@clerk/nextjs"
+import { useTheme } from "next-themes"
 import { ArrowUpRight, Star } from "lucide-react"
 import { GeometricBackground } from "./GeometricBackground"
 
@@ -12,23 +13,35 @@ interface HeroProps {
 
 export function Hero({ onOpenLogin }: HeroProps) {
   const { isSignedIn, isLoaded } = useUser()
+  const { resolvedTheme } = useTheme()
 
   return (
     <>
       <div className="relative flex h-[calc(100svh-64px-150px)] flex-row items-center overflow-hidden border-b border-dashed border-border">
         <GeometricBackground />
         <div className="z-10 flex flex-col gap-4">
-          {/* GitHub stars badge */}
-          <div className="flex flex-row items-center gap-2 px-6">
+          {/* Badges */}
+          <div className="flex flex-col gap-3 px-6">
             <a
+              href="https://peerlist.io/buddhsen/project/link1t--instant-portfolio-generator"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <img
+                src={`https://peerlist.io/api/v1/projects/embed/PRJHR8DJN69OD66QJ2M8OE7BJB6A98?showUpvote=true&theme=${resolvedTheme === "dark" ? "dark" : "light"}`}
+                alt="Link1t - Instant Portfolio Generator"
+                className="h-15 w-auto"
+              />
+            </a>
+            {/* <a
               href="https://github.com/Buddhsen-tripathi/link1t"
               target="_blank"
               rel="noopener noreferrer"
-              className="relative flex h-7 items-center gap-2 border border-border bg-muted/20 px-2"
+              className="relative flex h-7 w-fit items-center gap-2 border border-border bg-muted/20 px-2"
             >
               <Star className="size-4 text-yellow-500 fill-yellow-500" />
               <span className="text-sm font-semibold">Star</span>
-            </a>
+            </a> */}
           </div>
 
           {/* Headline */}
