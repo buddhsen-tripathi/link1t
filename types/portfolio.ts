@@ -98,8 +98,7 @@ export type ThemeId =
   | 'brutalist'
   | 'terminal'
   | 'bento'
-  | 'glassmorphism'
-  | 'retro';
+  | 'glassmorphism';
 
 export interface PortfolioData {
   portfolio: Portfolio;
@@ -116,7 +115,6 @@ export const THEME_OPTIONS: { id: ThemeId; name: string; description: string }[]
   { id: 'terminal', name: 'Terminal', description: 'Developer-focused' },
   { id: 'bento', name: 'Bento', description: 'Grid-based layout' },
   { id: 'glassmorphism', name: 'Glass', description: 'Frosted glass effects' },
-  { id: 'retro', name: 'Retro', description: 'Nostalgic 90s web' },
 ];
 
 export const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string }[] = [

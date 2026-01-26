@@ -3,7 +3,6 @@ import { BrutalistTheme } from './BrutalistTheme';
 import { TerminalTheme } from './TerminalTheme';
 import { BentoTheme } from './BentoTheme';
 import { GlassmorphismTheme } from './GlassmorphismTheme';
-import { RetroTheme } from './RetroTheme';
 import type { ThemeId, PortfolioData } from '@/types/portfolio';
 
 export type ThemeComponent = React.ComponentType<{
@@ -17,7 +16,6 @@ export const themes: Record<ThemeId, ThemeComponent> = {
   terminal: TerminalTheme,
   bento: BentoTheme,
   glassmorphism: GlassmorphismTheme,
-  retro: RetroTheme,
 };
 
-export { MinimalTheme, BrutalistTheme, TerminalTheme, BentoTheme, GlassmorphismTheme, RetroTheme };
+export { MinimalTheme, BrutalistTheme, TerminalTheme, BentoTheme, GlassmorphismTheme };

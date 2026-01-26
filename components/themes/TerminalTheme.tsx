@@ -1,6 +1,7 @@
 "use client";
 
 import type { PortfolioData } from "@/types/portfolio";
+import { useThemeData } from "./useThemeData";
 
 interface TerminalThemeProps {
   data: PortfolioData;
@@ -8,13 +9,7 @@ interface TerminalThemeProps {
 }
 
 export function TerminalTheme({ data }: TerminalThemeProps) {
-  const { portfolio, experiences, education, projects, skills, socialLinks } = data;
-
-  const formatDate = (date: string) => {
-    if (!date) return "";
-    const [year, month] = date.split("-");
-    return `${year}-${month}`;
-  };
+  const { portfolio, experiences, education, projects, skills, socialLinks, sections } = useThemeData(data);
 
   const Prompt = () => (
     <span className="text-green-400">$ </span>
@@ -48,7 +43,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
           </div>
 
           {/* Contact */}
-          {(portfolio.email || portfolio.location || portfolio.phone) && (
+          {sections.hasContact && (
             <div className="space-y-2">
               <div>
                 <Prompt />
@@ -63,7 +58,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
           )}
 
           {/* Bio */}
-          {portfolio.bio && (
+          {sections.hasBio && (
             <div className="space-y-2">
               <div>
                 <Prompt />
@@ -74,7 +69,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
           )}
 
           {/* Experience */}
-          {experiences.length > 0 && (
+          {sections.hasExperiences && (
             <div className="space-y-2">
               <div>
                 <Prompt />
@@ -88,7 +83,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
                       @ <span className="text-cyan-400">{exp.company}</span>
                     </p>
                     <p className="text-gray-500 text-xs">
-                      [{formatDate(exp.startDate)} → {exp.isCurrent ? "present" : formatDate(exp.endDate)}]
+                      [{exp.dashDateRange}]
                     </p>
                     {exp.description && (
                       <p className="text-gray-300 mt-2 whitespace-pre-wrap">{exp.description}</p>
@@ -100,7 +95,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
           )}
 
           {/* Education */}
-          {education.length > 0 && (
+          {sections.hasEducation && (
             <div className="space-y-2">
               <div>
                 <Prompt />
@@ -119,7 +114,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
           )}
 
           {/* Projects */}
-          {projects.length > 0 && (
+          {sections.hasProjects && (
             <div className="space-y-2">
               <div>
                 <Prompt />
@@ -163,7 +158,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
           )}
 
           {/* Skills */}
-          {skills.length > 0 && (
+          {sections.hasSkills && (
             <div className="space-y-2">
               <div>
                 <Prompt />
@@ -180,7 +175,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
           )}
 
           {/* Social Links */}
-          {socialLinks.length > 0 && (
+          {sections.hasSocialLinks && (
             <div className="space-y-2">
               <div>
                 <Prompt />
@@ -201,12 +196,6 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
               </div>
             </div>
           )}
-
-          {/* Cursor */}
-          <div>
-            <Prompt />
-            <span className="animate-pulse">_</span>
-          </div>
         </div>
       </div>
     </div>
