@@ -7,7 +7,7 @@ interface ThemeWrapperProps {
 
 export function ThemeWrapper({ children, scale = 0.5 }: ThemeWrapperProps) {
   return (
-    <div className="relative overflow-hidden border border-border bg-white shadow-sm">
+    <div className="relative overflow-hidden border border-border bg-transparent shadow-sm">
       <div
         className="origin-top-left"
         style={{

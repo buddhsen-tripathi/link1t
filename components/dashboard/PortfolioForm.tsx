@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronRight, GripVertical, Eye, EyeOff } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -27,7 +27,9 @@ import { EducationSection } from "./sections/EducationSection";
 import { ProjectsSection } from "./sections/ProjectsSection";
 import { SkillsSection } from "./sections/SkillsSection";
 import { SocialLinksSection } from "./sections/SocialLinksSection";
-import type { PortfolioData, Portfolio, Experience, Education, Project, Skill, SocialLink, SectionKey } from "@/types/portfolio";
+import { CertificationsSection } from "./sections/CertificationsSection";
+import { LanguagesSection } from "./sections/LanguagesSection";
+import type { PortfolioData, Portfolio, Experience, Education, Project, Skill, SocialLink, SectionKey, Certification, Language } from "@/types/portfolio";
 
 interface PortfolioFormProps {
   data: PortfolioData;
@@ -40,17 +42,21 @@ const SECTION_TITLES: Record<SectionKey, string> = {
   projects: "Projects",
   skills: "Skills",
   socialLinks: "Social Links",
+  certifications: "Certifications",
+  languages: "Languages",
 };
 
 interface SortableSectionProps {
   id: SectionKey;
   title: string;
   isExpanded: boolean;
+  isHidden: boolean;
   onToggle: () => void;
+  onToggleVisibility: () => void;
   children: React.ReactNode;
 }
 
-function SortableSection({ id, title, isExpanded, onToggle, children }: SortableSectionProps) {
+function SortableSection({ id, title, isExpanded, isHidden, onToggle, onToggleVisibility, children }: SortableSectionProps) {
   const {
     attributes,
     listeners,
@@ -92,11 +98,25 @@ function SortableSection({ id, title, isExpanded, onToggle, children }: Sortable
           onClick={onToggle}
           className="flex-1 flex items-center justify-between p-4 pl-0 text-left hover:bg-muted/50 transition-colors"
         >
-          <span className="font-medium">{title}</span>
+          <span className={cn("font-medium", isHidden && "text-muted-foreground line-through")}>
+            {title}
+          </span>
           {isExpanded ? (
             <ChevronDown className="w-4 h-4 text-muted-foreground" />
           ) : (
             <ChevronRight className="w-4 h-4 text-muted-foreground" />
+          )}
+        </button>
+        <button
+          onClick={onToggleVisibility}
+          className="p-4 hover:bg-muted/50 transition-colors"
+          aria-label={isHidden ? "Show section" : "Hide section"}
+          title={isHidden ? "Section hidden from portfolio" : "Section visible in portfolio"}
+        >
+          {isHidden ? (
+            <EyeOff className="w-4 h-4 text-muted-foreground" />
+          ) : (
+            <Eye className="w-4 h-4 text-muted-foreground" />
           )}
         </button>
       </div>
@@ -156,6 +176,27 @@ export function PortfolioForm({ data, onDataChange }: PortfolioFormProps) {
     onDataChange({ ...data, socialLinks });
   };
 
+  const updateCertifications = (certifications: Certification[]) => {
+    onDataChange({ ...data, certifications });
+  };
+
+  const updateLanguages = (languages: Language[]) => {
+    onDataChange({ ...data, languages });
+  };
+
+  const toggleSectionVisibility = (sectionKey: SectionKey) => {
+    const hiddenSections = data.portfolio.hiddenSections || [];
+    const isHidden = hiddenSections.includes(sectionKey);
+    const newHidden = isHidden
+      ? hiddenSections.filter((s) => s !== sectionKey)
+      : [...hiddenSections, sectionKey];
+    updatePortfolio({ hiddenSections: newHidden });
+  };
+
+  const isSectionHidden = (sectionKey: SectionKey) => {
+    return (data.portfolio.hiddenSections || []).includes(sectionKey);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
@@ -200,6 +241,20 @@ export function PortfolioForm({ data, onDataChange }: PortfolioFormProps) {
           <SocialLinksSection
             socialLinks={data.socialLinks}
             onChange={updateSocialLinks}
+          />
+        );
+      case "certifications":
+        return (
+          <CertificationsSection
+            certifications={data.certifications || []}
+            onChange={updateCertifications}
+          />
+        );
+      case "languages":
+        return (
+          <LanguagesSection
+            languages={data.languages || []}
+            onChange={updateLanguages}
           />
         );
       default:
@@ -277,7 +332,9 @@ export function PortfolioForm({ data, onDataChange }: PortfolioFormProps) {
               id={sectionKey}
               title={SECTION_TITLES[sectionKey]}
               isExpanded={expandedSections.has(sectionKey)}
+              isHidden={isSectionHidden(sectionKey)}
               onToggle={() => toggleSection(sectionKey)}
+              onToggleVisibility={() => toggleSectionVisibility(sectionKey)}
             >
               {renderSectionContent(sectionKey)}
             </SortableSection>

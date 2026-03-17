@@ -69,6 +69,8 @@ export function DashboardShell({
                 education: parsedData.education || data.education,
                 skills: parsedData.skills || data.skills,
                 socialLinks: parsedData.socialLinks || data.socialLinks,
+                certifications: parsedData.certifications || data.certifications,
+                languages: parsedData.languages || data.languages,
               });
             }}
           />

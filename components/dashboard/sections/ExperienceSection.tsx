@@ -23,8 +23,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { generateId, type Experience } from "@/types/portfolio";
+import { generateId, EMPLOYMENT_TYPES, type Experience, type EmploymentType } from "@/types/portfolio";
 
 interface ExperienceSectionProps {
   experiences: Experience[];
@@ -106,6 +107,36 @@ function SortableExperience({ exp, index, onUpdate, onRemove, onCurrentChange }:
         </div>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Company URL</Label>
+          <Input
+            type="url"
+            value={exp.companyUrl || ""}
+            onChange={(e) => onUpdate(exp.id, { companyUrl: e.target.value })}
+            placeholder="https://company.com"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Employment Type</Label>
+          <Select
+            value={exp.employmentType || ""}
+            onValueChange={(v) => onUpdate(exp.id, { employmentType: v as EmploymentType })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select type" />
+            </SelectTrigger>
+            <SelectContent>
+              {EMPLOYMENT_TYPES.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label>Location</Label>
         <Input
@@ -172,7 +203,9 @@ export function ExperienceSection({ experiences, onChange }: ExperienceSectionPr
       id: generateId(),
       portfolioId: "",
       company: "",
+      companyUrl: "",
       position: "",
+      employmentType: "",
       location: "",
       startDate: "",
       endDate: "",

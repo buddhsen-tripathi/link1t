@@ -4,8 +4,8 @@ import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ThemeWrapper } from "@/components/themes/ThemeWrapper";
-import { themes } from "@/components/themes";
-import { THEME_OPTIONS, type PortfolioData, type ThemeId } from "@/types/portfolio";
+import { themes, THEME_OPTIONS } from "@/components/themes";
+import type { PortfolioData, ThemeId } from "@/types/portfolio";
 
 interface PreviewPanelProps {
   data: PortfolioData;

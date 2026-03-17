@@ -40,6 +40,10 @@ const PLATFORM_ICONS: Record<SocialPlatform, string> = {
   medium: "Medium",
   devto: "Dev.to",
   instagram: "Instagram",
+  stackoverflow: "Stack Overflow",
+  hashnode: "Hashnode",
+  bluesky: "Bluesky",
+  kaggle: "Kaggle",
 };
 
 const PLATFORM_PLACEHOLDERS: Record<SocialPlatform, string> = {
@@ -53,6 +57,10 @@ const PLATFORM_PLACEHOLDERS: Record<SocialPlatform, string> = {
   medium: "@username",
   devto: "username",
   instagram: "username",
+  stackoverflow: "user-id",
+  hashnode: "username",
+  bluesky: "handle.bsky.social",
+  kaggle: "username",
 };
 
 // Base URLs for auto-completing usernames
@@ -67,6 +75,10 @@ const PLATFORM_BASE_URLS: Record<SocialPlatform, string | null> = {
   medium: "https://medium.com/",
   devto: "https://dev.to/",
   instagram: "https://instagram.com/",
+  stackoverflow: "https://stackoverflow.com/users/",
+  hashnode: "https://hashnode.com/@",
+  bluesky: "https://bsky.app/profile/",
+  kaggle: "https://kaggle.com/",
 };
 
 // Build full URL from username and platform

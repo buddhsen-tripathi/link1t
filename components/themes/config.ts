@@ -25,22 +25,27 @@ export const formatDate = {
 
 // Section visibility helpers
 export function getSectionVisibility(data: PortfolioData) {
-  const { portfolio, experiences, education, projects, skills, socialLinks } = data;
+  const { portfolio, experiences, education, projects, skills, socialLinks, certifications, languages } = data;
+  const hidden = portfolio.hiddenSections || [];
 
   return {
     hasName: !!portfolio.fullName?.trim(),
     hasTitle: !!portfolio.title?.trim(),
+    hasHeadline: !!portfolio.headline?.trim(),
     hasBio: !!portfolio.bio?.trim(),
     hasEmail: !!portfolio.email?.trim(),
     hasPhone: !!portfolio.phone?.trim(),
     hasLocation: !!portfolio.location?.trim(),
     hasProfileImage: !!portfolio.profileImageUrl,
+    hasResumeUrl: !!portfolio.resumeUrl,
     hasContact: !!(portfolio.email?.trim() || portfolio.phone?.trim() || portfolio.location?.trim()),
-    hasExperiences: experiences.length > 0,
-    hasEducation: education.length > 0,
-    hasProjects: projects.length > 0,
-    hasSkills: skills.length > 0,
-    hasSocialLinks: socialLinks.length > 0,
+    hasExperiences: experiences.length > 0 && !hidden.includes('experiences'),
+    hasEducation: education.length > 0 && !hidden.includes('education'),
+    hasProjects: projects.length > 0 && !hidden.includes('projects'),
+    hasSkills: skills.length > 0 && !hidden.includes('skills'),
+    hasSocialLinks: socialLinks.length > 0 && !hidden.includes('socialLinks'),
+    hasCertifications: (certifications || []).length > 0 && !hidden.includes('certifications'),
+    hasLanguages: (languages || []).length > 0 && !hidden.includes('languages'),
   };
 }
 
@@ -56,6 +61,10 @@ export const SOCIAL_PLATFORM_URLS: Record<SocialPlatform, string | null> = {
   medium: "https://medium.com/",
   devto: "https://dev.to/",
   instagram: "https://instagram.com/",
+  stackoverflow: "https://stackoverflow.com/users/",
+  hashnode: "https://hashnode.com/@",
+  bluesky: "https://bsky.app/profile/",
+  kaggle: "https://kaggle.com/",
 };
 
 // Social platform display names
@@ -70,6 +79,10 @@ export const SOCIAL_PLATFORM_NAMES: Record<SocialPlatform, string> = {
   medium: "Medium",
   devto: "Dev.to",
   instagram: "Instagram",
+  stackoverflow: "Stack Overflow",
+  hashnode: "Hashnode",
+  bluesky: "Bluesky",
+  kaggle: "Kaggle",
 };
 
 // Extract username from social URL

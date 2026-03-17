@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, Trash2, GripVertical, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { Plus, Trash2, GripVertical, X, Upload, Loader2, Star } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { generateId, type Project } from "@/types/portfolio";
 
@@ -40,6 +41,8 @@ interface SortableProjectProps {
   onRemove: (id: string) => void;
   onAddTechnology: () => void;
   onRemoveTechnology: (tech: string) => void;
+  onImageUpload: (id: string, file: File) => void;
+  isUploadingImage: boolean;
 }
 
 function SortableProject({
@@ -51,7 +54,10 @@ function SortableProject({
   onRemove,
   onAddTechnology,
   onRemoveTechnology,
+  onImageUpload,
+  isUploadingImage,
 }: SortableProjectProps) {
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const {
     attributes,
     listeners,
@@ -95,6 +101,9 @@ function SortableProject({
           <span className="text-sm font-medium">
             Project {index + 1}
           </span>
+          {proj.featured && (
+            <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+          )}
         </div>
         <Button
           variant="ghost"
@@ -123,6 +132,54 @@ function SortableProject({
           placeholder="Brief description of the project..."
           className="min-h-[80px]"
         />
+      </div>
+
+      {/* Project Image */}
+      <div className="space-y-2">
+        <Label>Project Screenshot</Label>
+        <div className="flex items-center gap-4">
+          {proj.imageUrl ? (
+            <div className="relative">
+              <img
+                src={proj.imageUrl}
+                alt={proj.name}
+                className="w-32 h-20 object-cover border border-border"
+              />
+              <button
+                onClick={() => onUpdate(proj.id, { imageUrl: "" })}
+                className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => !isUploadingImage && imageInputRef.current?.click()}
+              className={`w-32 h-20 border border-dashed border-border flex items-center justify-center transition-colors ${
+                isUploadingImage ? "cursor-not-allowed bg-muted/30" : "cursor-pointer hover:bg-muted/50"
+              }`}
+            >
+              {isUploadingImage ? (
+                <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+              ) : (
+                <Upload className="w-5 h-5 text-muted-foreground" />
+              )}
+            </div>
+          )}
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onImageUpload(proj.id, file);
+              if (imageInputRef.current) imageInputRef.current.value = "";
+            }}
+            className="hidden"
+            disabled={isUploadingImage}
+          />
+          <span className="text-xs text-muted-foreground">JPG, PNG up to 5MB</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,12 +240,24 @@ function SortableProject({
           </div>
         )}
       </div>
+
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={`featured-${proj.id}`}
+          checked={proj.featured || false}
+          onCheckedChange={(checked) => onUpdate(proj.id, { featured: checked === true })}
+        />
+        <Label htmlFor={`featured-${proj.id}`} className="text-sm font-normal cursor-pointer">
+          Featured project (shown prominently)
+        </Label>
+      </div>
     </div>
   );
 }
 
 export function ProjectsSection({ projects, onChange }: ProjectsSectionProps) {
   const [techInput, setTechInput] = useState<Record<string, string>>({});
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -207,6 +276,7 @@ export function ProjectsSection({ projects, onChange }: ProjectsSectionProps) {
       githubUrl: "",
       imageUrl: "",
       technologies: [],
+      featured: false,
       displayOrder: projects.length,
     };
     onChange([...projects, newProject]);
@@ -243,6 +313,28 @@ export function ProjectsSection({ projects, onChange }: ProjectsSectionProps) {
       updateProject(projectId, {
         technologies: project.technologies.filter((t) => t !== tech),
       });
+    }
+  };
+
+  const handleImageUpload = async (projectId: string, file: File) => {
+    setUploadingImage(projectId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        updateProject(projectId, { imageUrl: result.url });
+      }
+    } catch (error) {
+      console.error("Project image upload error:", error);
+    } finally {
+      setUploadingImage(null);
     }
   };
 
@@ -295,6 +387,8 @@ export function ProjectsSection({ projects, onChange }: ProjectsSectionProps) {
                   onRemove={removeProject}
                   onAddTechnology={() => addTechnology(proj.id)}
                   onRemoveTechnology={(tech) => removeTechnology(proj.id, tech)}
+                  onImageUpload={handleImageUpload}
+                  isUploadingImage={uploadingImage === proj.id}
                 />
               ))}
             </SortableContext>
