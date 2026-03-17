@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { r2Client } from "@/lib/r2/client";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const DOCUMENT_TYPES = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+const ALLOWED_TYPES = [...IMAGE_TYPES, ...DOCUMENT_TYPES];
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(request: Request) {
@@ -39,7 +41,8 @@ export async function POST(request: Request) {
     // Generate unique filename
     const extension = file.name.split(".").pop() || "jpg";
     const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`;
-    const key = `profiles/${userId}/${filename}`;
+    const folder = DOCUMENT_TYPES.includes(file.type) ? "documents" : "profiles";
+    const key = `${folder}/${userId}/${filename}`;
 
     // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -54,10 +57,13 @@ export async function POST(request: Request) {
       })
     );
 
-    // Construct the public URL
-    // Note: This assumes you have a public URL configured for your R2 bucket
-    const url = `${process.env.R2_PUBLIC_URL || process.env.R2_ENDPOINT}/${key}`;
+    // For documents, return the R2 key (served via /api/download proxy)
+    // For images, return the public URL
+    if (DOCUMENT_TYPES.includes(file.type)) {
+      return NextResponse.json({ url: key });
+    }
 
+    const url = `${process.env.R2_PUBLIC_URL || process.env.R2_ENDPOINT}/${key}`;
     return NextResponse.json({ url });
   } catch (error) {
     console.error("Error uploading file:", error);

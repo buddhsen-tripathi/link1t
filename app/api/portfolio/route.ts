@@ -60,7 +60,16 @@ export async function GET() {
       projects: [],
       skills: [],
       socialLinks: [],
+      certifications: [],
+      languages: [],
     };
+
+    // Ensure sectionOrder includes new section keys for existing portfolios
+    let sectionOrder = portfolio.section_order || DEFAULT_SECTION_ORDER;
+    const missingSections = DEFAULT_SECTION_ORDER.filter((s) => !sectionOrder.includes(s));
+    if (missingSections.length > 0) {
+      sectionOrder = [...sectionOrder, ...missingSections];
+    }
 
     const data = {
       portfolio: {
@@ -68,13 +77,16 @@ export async function GET() {
         userId: portfolio.user_id,
         fullName: portfolio.full_name || "",
         title: portfolio.title || "",
+        headline: content.headline || "",
         email: portfolio.email || "",
         phone: portfolio.phone || "",
         location: portfolio.location || "",
         profileImageUrl: portfolio.profile_image_url || "",
+        resumeUrl: content.resumeUrl || "",
         bio: portfolio.bio || "",
         themeId: portfolio.theme_id || "brutalist",
-        sectionOrder: portfolio.section_order || DEFAULT_SECTION_ORDER,
+        sectionOrder,
+        hiddenSections: content.hiddenSections || [],
         isPublished: portfolio.is_published || false,
         publishedAt: portfolio.published_at,
         createdAt: portfolio.created_at,
@@ -85,6 +97,8 @@ export async function GET() {
       projects: content.projects || [],
       skills: content.skills || [],
       socialLinks: content.socialLinks || [],
+      certifications: content.certifications || [],
+      languages: content.languages || [],
     };
 
     return NextResponse.json({
@@ -181,13 +195,18 @@ export async function PUT(request: Request) {
         .eq("id", user.id);
     }
 
-    // Build content JSONB
+    // Build content JSONB — includes all sub-items + new portfolio-level fields stored in content
     const content = {
       experiences: body.experiences || [],
       education: body.education || [],
       projects: body.projects || [],
       skills: body.skills || [],
       socialLinks: body.socialLinks || [],
+      certifications: body.certifications || [],
+      languages: body.languages || [],
+      headline: body.portfolio?.headline || "",
+      resumeUrl: body.portfolio?.resumeUrl || "",
+      hiddenSections: body.portfolio?.hiddenSections || [],
     };
 
     // Portfolio data

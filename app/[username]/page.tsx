@@ -46,7 +46,16 @@ async function getPortfolioByUsername(
     projects: [],
     skills: [],
     socialLinks: [],
+    certifications: [],
+    languages: [],
   };
+
+  // Ensure sectionOrder includes new section keys for existing portfolios
+  let sectionOrder = portfolio.section_order || DEFAULT_SECTION_ORDER;
+  const missingSections = DEFAULT_SECTION_ORDER.filter((s: string) => !sectionOrder.includes(s));
+  if (missingSections.length > 0) {
+    sectionOrder = [...sectionOrder, ...missingSections];
+  }
 
   // Transform database format to app format
   return {
@@ -55,13 +64,16 @@ async function getPortfolioByUsername(
       userId: portfolio.user_id,
       fullName: portfolio.full_name || "",
       title: portfolio.title || "",
+      headline: content.headline || "",
       email: portfolio.email || "",
       phone: portfolio.phone || "",
       location: portfolio.location || "",
       profileImageUrl: portfolio.profile_image_url || "",
+      resumeUrl: content.resumeUrl || "",
       bio: portfolio.bio || "",
       themeId: (portfolio.theme_id || "brutalist") as ThemeId,
-      sectionOrder: portfolio.section_order || DEFAULT_SECTION_ORDER,
+      sectionOrder,
+      hiddenSections: content.hiddenSections || [],
       isPublished: portfolio.is_published || false,
       publishedAt: portfolio.published_at,
       createdAt: portfolio.created_at,
@@ -72,6 +84,8 @@ async function getPortfolioByUsername(
     projects: content.projects || [],
     skills: content.skills || [],
     socialLinks: content.socialLinks || [],
+    certifications: content.certifications || [],
+    languages: content.languages || [],
   };
 }
 
