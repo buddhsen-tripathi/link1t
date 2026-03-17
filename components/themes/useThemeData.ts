@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import type { PortfolioData } from "@/types/portfolio";
-import { formatDate, getSectionVisibility } from "./config";
+import type { PortfolioData, SocialLink } from "@/types/portfolio";
+import { formatDate, getSectionVisibility, SOCIAL_PLATFORM_URLS } from "./config";
 
 // Convert R2 key to download proxy URL — never expose raw R2 links
 function toResumeDownloadUrl(resumeUrl: string): string {
@@ -80,6 +80,32 @@ export function useThemeData(data: PortfolioData) {
     resumeUrl: toResumeDownloadUrl(portfolio.resumeUrl),
   }), [portfolio]);
 
+  // Ensure social link URLs are absolute (not bare usernames that resolve as relative paths)
+  const normalizedSocialLinks = useMemo(() =>
+    socialLinks.map((link: SocialLink) => {
+      const url = link.url?.trim();
+      if (!url) return link;
+      // Already a full URL
+      if (url.startsWith("http://") || url.startsWith("https://")) return link;
+      // Has a dot — treat as domain (e.g. "github.com/user")
+      if (url.includes(".")) return { ...link, url: `https://${url}` };
+      // Bare username or path — prepend platform base URL
+      const baseUrl = SOCIAL_PLATFORM_URLS[link.platform];
+      if (baseUrl) {
+        // Strip platform domain prefix if already present to avoid duplication
+        // e.g. "github/user" for github platform → strip "github/" → "user"
+        const domain = new URL(baseUrl).hostname.replace("www.", "");
+        const domainName = domain.split(".")[0]; // "github" from "github.com"
+        const stripped = url.startsWith(`${domainName}/`)
+          ? url.slice(domainName.length + 1)
+          : url;
+        return { ...link, url: `${baseUrl}${stripped}` };
+      }
+      return { ...link, url: `https://${url}` };
+    }),
+    [socialLinks]
+  );
+
   return {
     // Raw data
     portfolio: safePortfolio,
@@ -87,7 +113,7 @@ export function useThemeData(data: PortfolioData) {
     education: formattedEducation,
     projects: sortedProjects,
     skills,
-    socialLinks,
+    socialLinks: normalizedSocialLinks,
     certifications: formattedCertifications,
     languages,
 
