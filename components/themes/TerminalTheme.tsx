@@ -8,8 +8,16 @@ interface TerminalThemeProps {
   isPreview?: boolean;
 }
 
+const EMPLOYMENT_TYPES_MAP: Record<string, string> = {
+  'full-time': 'full-time',
+  'part-time': 'part-time',
+  'contract': 'contract',
+  'freelance': 'freelance',
+  'internship': 'internship',
+};
+
 export function TerminalTheme({ data }: TerminalThemeProps) {
-  const { portfolio, experiences, education, projects, skills, socialLinks, sections } = useThemeData(data);
+  const { portfolio, experiences, education, projects, skills, socialLinks, certifications, languages, sections } = useThemeData(data);
 
   const Prompt = () => (
     <span className="text-green-400">$ </span>
@@ -39,6 +47,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
             <div className="pl-4">
               <p className="text-2xl font-bold text-white">{portfolio.fullName || "user"}</p>
               {portfolio.title && <p className="text-cyan-400">{portfolio.title}</p>}
+              {sections.hasHeadline && <p className="text-gray-400 italic">// {portfolio.headline}</p>}
             </div>
           </div>
 
@@ -53,6 +62,9 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
                 {portfolio.email && <p>email: {portfolio.email}</p>}
                 {portfolio.phone && <p>phone: {portfolio.phone}</p>}
                 {portfolio.location && <p>location: {portfolio.location}</p>}
+                {sections.hasResumeUrl && (
+                  <p>resume: <a href={portfolio.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">[download]</a></p>
+                )}
               </div>
             </div>
           )}
@@ -80,7 +92,12 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
                   <div key={exp.id} className="border-l border-[#30363d] pl-4">
                     <p className="text-yellow-400">{exp.position}</p>
                     <p className="text-gray-400">
-                      @ <span className="text-cyan-400">{exp.company}</span>
+                      @ <span className="text-cyan-400">
+                        {exp.companyUrl ? (
+                          <a href={exp.companyUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{exp.company}</a>
+                        ) : exp.company}
+                      </span>
+                      {exp.employmentType && <span className="text-gray-500"> ({EMPLOYMENT_TYPES_MAP[exp.employmentType]})</span>}
                     </p>
                     <p className="text-gray-500 text-xs">
                       [{exp.dashDateRange}]
@@ -126,6 +143,7 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
                     <div className="flex items-center gap-2">
                       <span className="text-yellow-400">./</span>
                       <span className="text-white">{project.name}</span>
+                      {project.featured && <span className="text-yellow-400 text-xs">[★ featured]</span>}
                     </div>
                     {project.description && (
                       <p className="text-gray-400 mt-1 text-xs"># {project.description}</p>
@@ -174,6 +192,45 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
             </div>
           )}
 
+          {/* Certifications */}
+          {sections.hasCertifications && (
+            <div className="space-y-2">
+              <div>
+                <Prompt />
+                <span className="text-white">cat certifications.json</span>
+              </div>
+              <div className="pl-4 space-y-2">
+                {certifications.map((cert) => (
+                  <div key={cert.id} className="text-gray-300">
+                    <span className="text-yellow-400">{cert.name}</span>
+                    <span className="text-gray-500"> — {cert.issuer}</span>
+                    {cert.formattedIssueDate && <span className="text-gray-500 text-xs"> [{cert.formattedIssueDate}]</span>}
+                    {cert.credentialUrl && (
+                      <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline ml-2 text-xs">[verify]</a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Languages */}
+          {sections.hasLanguages && (
+            <div className="space-y-2">
+              <div>
+                <Prompt />
+                <span className="text-white">echo $LANGUAGES</span>
+              </div>
+              <div className="pl-4 flex flex-wrap gap-2">
+                {languages.map((lang) => (
+                  <span key={lang.id} className="text-xs text-green-400">
+                    {lang.name}:<span className="text-gray-500">{lang.proficiency}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Social Links */}
           {sections.hasSocialLinks && (
             <div className="space-y-2">
@@ -201,3 +258,10 @@ export function TerminalTheme({ data }: TerminalThemeProps) {
     </div>
   );
 }
+
+export const terminalThemeConfig = {
+  id: 'terminal' as const,
+  name: 'Terminal',
+  description: 'Developer-focused',
+  component: TerminalTheme,
+};

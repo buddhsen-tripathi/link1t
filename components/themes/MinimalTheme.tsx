@@ -1,12 +1,9 @@
 "use client";
 
-import { Mail, Phone, MapPin, ExternalLink, Github, Linkedin, Twitter } from "lucide-react";
+import { Mail, Phone, MapPin, ExternalLink, Github, Linkedin, Twitter, Download, Award, Globe } from "lucide-react";
 import type { PortfolioData, SocialPlatform } from "@/types/portfolio";
-
-interface MinimalThemeProps {
-  data: PortfolioData;
-  isPreview?: boolean;
-}
+import { useThemeData } from "./useThemeData";
+import { LANGUAGE_PROFICIENCIES } from "@/types/portfolio";
 
 const SocialIcon = ({ platform }: { platform: SocialPlatform }) => {
   switch (platform) {
@@ -21,15 +18,8 @@ const SocialIcon = ({ platform }: { platform: SocialPlatform }) => {
   }
 };
 
-export function MinimalTheme({ data }: MinimalThemeProps) {
-  const { portfolio, experiences, education, projects, skills, socialLinks } = data;
-
-  const formatDate = (date: string) => {
-    if (!date) return "";
-    const [year, month] = date.split("-");
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return `${months[parseInt(month) - 1]} ${year}`;
-  };
+export function MinimalTheme({ data }: { data: PortfolioData; isPreview?: boolean }) {
+  const { portfolio, experiences, education, projects, skills, socialLinks, certifications, languages, sections } = useThemeData(data);
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans">
@@ -50,6 +40,9 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
             {portfolio.title && (
               <p className="mt-2 text-lg text-gray-600">{portfolio.title}</p>
             )}
+            {sections.hasHeadline && (
+              <p className="mt-1 text-sm text-gray-500 italic">{portfolio.headline}</p>
+            )}
             <div className="mt-4 flex flex-wrap gap-4 text-sm text-gray-500">
               {portfolio.email && (
                 <a href={`mailto:${portfolio.email}`} className="flex items-center gap-1 hover:text-gray-900">
@@ -69,6 +62,12 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
                   {portfolio.location}
                 </span>
               )}
+              {sections.hasResumeUrl && (
+                <a href={portfolio.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-gray-900">
+                  <Download className="w-4 h-4" />
+                  Resume
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -84,7 +83,7 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
         )}
 
         {/* Experience */}
-        {experiences.length > 0 && (
+        {sections.hasExperiences && (
           <section>
             <h2 className="text-xs uppercase tracking-widest text-gray-400 mb-6">Experience</h2>
             <div className="space-y-8">
@@ -93,10 +92,15 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium text-gray-900">{exp.position}</h3>
-                      <p className="text-gray-600">{exp.company}</p>
+                      <p className="text-gray-600">
+                        {exp.companyUrl ? (
+                          <a href={exp.companyUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{exp.company}</a>
+                        ) : exp.company}
+                        {exp.employmentType && <span className="text-gray-400 text-sm ml-2">({EMPLOYMENT_TYPES_MAP[exp.employmentType]})</span>}
+                      </p>
                     </div>
                     <span className="text-sm text-gray-400">
-                      {formatDate(exp.startDate)} — {exp.isCurrent ? "Present" : formatDate(exp.endDate)}
+                      {exp.dateRange}
                     </span>
                   </div>
                   {exp.description && (
@@ -109,7 +113,7 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
         )}
 
         {/* Education */}
-        {education.length > 0 && (
+        {sections.hasEducation && (
           <section>
             <h2 className="text-xs uppercase tracking-widest text-gray-400 mb-6">Education</h2>
             <div className="space-y-6">
@@ -124,7 +128,7 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
                       )}
                     </div>
                     <span className="text-sm text-gray-400">
-                      {formatDate(edu.startDate)} — {formatDate(edu.endDate)}
+                      {edu.dateRange}
                     </span>
                   </div>
                 </div>
@@ -134,14 +138,20 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
         )}
 
         {/* Projects */}
-        {projects.length > 0 && (
+        {sections.hasProjects && (
           <section>
             <h2 className="text-xs uppercase tracking-widest text-gray-400 mb-6">Projects</h2>
             <div className="grid gap-6">
               {projects.map((project) => (
                 <div key={project.id} className="group">
+                  {project.imageUrl && (
+                    <img src={project.imageUrl} alt={project.name} className="w-full h-40 object-cover rounded mb-3" />
+                  )}
                   <div className="flex items-start justify-between">
-                    <h3 className="font-medium text-gray-900">{project.name}</h3>
+                    <h3 className="font-medium text-gray-900">
+                      {project.name}
+                      {project.featured && <span className="ml-2 text-xs text-yellow-600 bg-yellow-50 px-1.5 py-0.5 rounded">Featured</span>}
+                    </h3>
                     <div className="flex gap-2">
                       {project.url && (
                         <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900">
@@ -174,7 +184,7 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
         )}
 
         {/* Skills */}
-        {skills.length > 0 && (
+        {sections.hasSkills && (
           <section>
             <h2 className="text-xs uppercase tracking-widest text-gray-400 mb-4">Skills</h2>
             <div className="flex flex-wrap gap-2">
@@ -187,8 +197,50 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
           </section>
         )}
 
+        {/* Certifications */}
+        {sections.hasCertifications && (
+          <section>
+            <h2 className="text-xs uppercase tracking-widest text-gray-400 mb-6">Certifications</h2>
+            <div className="space-y-4">
+              {certifications.map((cert) => (
+                <div key={cert.id} className="flex items-start gap-3">
+                  <Award className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-gray-900">
+                      {cert.credentialUrl ? (
+                        <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{cert.name}</a>
+                      ) : cert.name}
+                    </h3>
+                    <p className="text-sm text-gray-600">{cert.issuer}</p>
+                    {cert.formattedIssueDate && (
+                      <p className="text-xs text-gray-400">
+                        {cert.formattedIssueDate}
+                        {cert.formattedExpiryDate && ` — ${cert.formattedExpiryDate}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Languages */}
+        {sections.hasLanguages && (
+          <section>
+            <h2 className="text-xs uppercase tracking-widest text-gray-400 mb-4">Languages</h2>
+            <div className="flex flex-wrap gap-3">
+              {languages.map((lang) => (
+                <span key={lang.id} className="text-sm text-gray-700">
+                  {lang.name} <span className="text-gray-400">({lang.proficiency})</span>
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Social Links */}
-        {socialLinks.length > 0 && (
+        {sections.hasSocialLinks && (
           <section>
             <h2 className="text-xs uppercase tracking-widest text-gray-400 mb-4">Connect</h2>
             <div className="flex gap-4">
@@ -210,3 +262,18 @@ export function MinimalTheme({ data }: MinimalThemeProps) {
     </div>
   );
 }
+
+const EMPLOYMENT_TYPES_MAP: Record<string, string> = {
+  'full-time': 'Full-time',
+  'part-time': 'Part-time',
+  'contract': 'Contract',
+  'freelance': 'Freelance',
+  'internship': 'Internship',
+};
+
+export const minimalThemeConfig = {
+  id: 'minimal' as const,
+  name: 'Minimal',
+  description: 'Clean and professional',
+  component: MinimalTheme,
+};

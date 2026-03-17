@@ -1,12 +1,21 @@
 "use client";
 
-import { Mail, Phone, MapPin, ExternalLink, Github, Linkedin, Twitter } from "lucide-react";
+import { Mail, Phone, MapPin, ExternalLink, Github, Linkedin, Twitter, Download, Award } from "lucide-react";
 import type { PortfolioData, SocialPlatform } from "@/types/portfolio";
+import { useThemeData } from "./useThemeData";
 
 interface BrutalistThemeProps {
   data: PortfolioData;
   isPreview?: boolean;
 }
+
+const EMPLOYMENT_TYPES_MAP: Record<string, string> = {
+  'full-time': 'Full-time',
+  'part-time': 'Part-time',
+  'contract': 'Contract',
+  'freelance': 'Freelance',
+  'internship': 'Internship',
+};
 
 const SocialIcon = ({ platform }: { platform: SocialPlatform }) => {
   switch (platform) {
@@ -22,7 +31,7 @@ const SocialIcon = ({ platform }: { platform: SocialPlatform }) => {
 };
 
 export function BrutalistTheme({ data }: BrutalistThemeProps) {
-  const { portfolio, experiences, education, projects, skills, socialLinks } = data;
+  const { portfolio, experiences, education, projects, skills, socialLinks, certifications, languages, sections } = useThemeData(data);
 
   const formatDate = (date: string) => {
     if (!date) return "";
@@ -52,6 +61,11 @@ export function BrutalistTheme({ data }: BrutalistThemeProps) {
                   {portfolio.title}
                 </p>
               )}
+              {sections.hasHeadline && (
+                <p className="mt-2 text-sm uppercase tracking-wide text-gray-600">
+                  {portfolio.headline}
+                </p>
+              )}
               <div className="mt-6 flex flex-wrap gap-4 text-sm">
                 {portfolio.email && (
                   <a href={`mailto:${portfolio.email}`} className="flex items-center gap-2 border-2 border-black px-3 py-1 hover:bg-black hover:text-white transition-colors">
@@ -64,6 +78,12 @@ export function BrutalistTheme({ data }: BrutalistThemeProps) {
                     <MapPin className="w-4 h-4" />
                     {portfolio.location}
                   </span>
+                )}
+                {sections.hasResumeUrl && (
+                  <a href={portfolio.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 border-2 border-black px-3 py-1 hover:bg-black hover:text-white transition-colors">
+                    <Download className="w-4 h-4" />
+                    RESUME
+                  </a>
                 )}
               </div>
             </div>
@@ -83,18 +103,23 @@ export function BrutalistTheme({ data }: BrutalistThemeProps) {
         )}
 
         {/* Experience */}
-        {experiences.length > 0 && (
+        {sections.hasExperiences && (
           <section>
             <h2 className="text-2xl font-bold uppercase mb-6 bg-black text-white px-4 py-2 inline-block">
               Experience
             </h2>
             <div className="space-y-6">
-              {experiences.map((exp, index) => (
+              {experiences.map((exp) => (
                 <div key={exp.id} className="border-l-4 border-black pl-6">
                   <div className="flex justify-between items-start flex-wrap gap-2">
                     <div>
                       <h3 className="text-xl font-bold uppercase">{exp.position}</h3>
-                      <p className="text-lg">{exp.company}</p>
+                      <p className="text-lg">
+                        {exp.companyUrl ? (
+                          <a href={exp.companyUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{exp.company}</a>
+                        ) : exp.company}
+                        {exp.employmentType && <span className="text-sm ml-2 border border-black px-1">{EMPLOYMENT_TYPES_MAP[exp.employmentType]}</span>}
+                      </p>
                     </div>
                     <span className="text-sm border-2 border-black px-2 py-1">
                       {formatDate(exp.startDate)} → {exp.isCurrent ? "NOW" : formatDate(exp.endDate)}
@@ -110,7 +135,7 @@ export function BrutalistTheme({ data }: BrutalistThemeProps) {
         )}
 
         {/* Education */}
-        {education.length > 0 && (
+        {sections.hasEducation && (
           <section>
             <h2 className="text-2xl font-bold uppercase mb-6 bg-black text-white px-4 py-2 inline-block">
               Education
@@ -131,16 +156,22 @@ export function BrutalistTheme({ data }: BrutalistThemeProps) {
         )}
 
         {/* Projects */}
-        {projects.length > 0 && (
+        {sections.hasProjects && (
           <section>
             <h2 className="text-2xl font-bold uppercase mb-6 bg-black text-white px-4 py-2 inline-block">
               Projects
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               {projects.map((project) => (
-                <div key={project.id} className="border-4 border-black p-4">
+                <div key={project.id} className={`border-4 border-black p-4 ${project.featured ? 'bg-yellow-50' : ''}`}>
+                  {project.imageUrl && (
+                    <img src={project.imageUrl} alt={project.name} className="w-full h-32 object-cover border-2 border-black mb-3 grayscale" />
+                  )}
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="text-lg font-bold uppercase">{project.name}</h3>
+                    <h3 className="text-lg font-bold uppercase">
+                      {project.name}
+                      {project.featured && <span className="text-xs ml-1">★</span>}
+                    </h3>
                     <div className="flex gap-2">
                       {project.url && (
                         <a href={project.url} target="_blank" rel="noopener noreferrer" className="hover:bg-black hover:text-white p-1 border-2 border-black">
@@ -173,7 +204,7 @@ export function BrutalistTheme({ data }: BrutalistThemeProps) {
         )}
 
         {/* Skills */}
-        {skills.length > 0 && (
+        {sections.hasSkills && (
           <section>
             <h2 className="text-2xl font-bold uppercase mb-6 bg-black text-white px-4 py-2 inline-block">
               Skills
@@ -188,8 +219,50 @@ export function BrutalistTheme({ data }: BrutalistThemeProps) {
           </section>
         )}
 
+        {/* Certifications */}
+        {sections.hasCertifications && (
+          <section>
+            <h2 className="text-2xl font-bold uppercase mb-6 bg-black text-white px-4 py-2 inline-block">
+              Certifications
+            </h2>
+            <div className="space-y-4">
+              {certifications.map((cert) => (
+                <div key={cert.id} className="border-l-4 border-black pl-6">
+                  <h3 className="font-bold uppercase">
+                    {cert.credentialUrl ? (
+                      <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{cert.name}</a>
+                    ) : cert.name}
+                  </h3>
+                  <p>{cert.issuer}</p>
+                  {cert.formattedIssueDate && (
+                    <span className="text-sm">
+                      {cert.formattedIssueDate}{cert.formattedExpiryDate && ` → ${cert.formattedExpiryDate}`}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Languages */}
+        {sections.hasLanguages && (
+          <section>
+            <h2 className="text-2xl font-bold uppercase mb-6 bg-black text-white px-4 py-2 inline-block">
+              Languages
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {languages.map((lang) => (
+                <span key={lang.id} className="border-2 border-black px-3 py-1 text-sm uppercase">
+                  {lang.name} [{lang.proficiency}]
+                </span>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Social Links */}
-        {socialLinks.length > 0 && (
+        {sections.hasSocialLinks && (
           <section className="border-t-4 border-black pt-8">
             <div className="flex gap-4">
               {socialLinks.map((link) => (
@@ -210,3 +283,10 @@ export function BrutalistTheme({ data }: BrutalistThemeProps) {
     </div>
   );
 }
+
+export const brutalistThemeConfig = {
+  id: 'brutalist' as const,
+  name: 'Brutalist',
+  description: 'Bold and striking',
+  component: BrutalistTheme,
+};

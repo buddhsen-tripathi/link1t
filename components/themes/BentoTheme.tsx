@@ -1,7 +1,8 @@
 "use client";
 
-import { Mail, MapPin, ExternalLink, Github, Linkedin, Twitter } from "lucide-react";
+import { Mail, MapPin, ExternalLink, Github, Linkedin, Twitter, Download, Award } from "lucide-react";
 import type { PortfolioData, SocialPlatform } from "@/types/portfolio";
+import { useThemeData } from "./useThemeData";
 
 interface BentoThemeProps {
   data: PortfolioData;
@@ -21,8 +22,16 @@ const SocialIcon = ({ platform }: { platform: SocialPlatform }) => {
   }
 };
 
+const EMPLOYMENT_TYPES_MAP: Record<string, string> = {
+  'full-time': 'Full-time',
+  'part-time': 'Part-time',
+  'contract': 'Contract',
+  'freelance': 'Freelance',
+  'internship': 'Internship',
+};
+
 export function BentoTheme({ data }: BentoThemeProps) {
-  const { portfolio, experiences, education, projects, skills, socialLinks } = data;
+  const { portfolio, experiences, education, projects, skills, socialLinks, certifications, languages, sections, formatDate: fmt } = useThemeData(data);
 
   const formatDate = (date: string) => {
     if (!date) return "";
@@ -53,6 +62,9 @@ export function BentoTheme({ data }: BentoThemeProps) {
                 {portfolio.title && (
                   <p className="text-white/60">{portfolio.title}</p>
                 )}
+                {sections.hasHeadline && (
+                  <p className="text-white/40 text-sm mt-1">{portfolio.headline}</p>
+                )}
               </div>
             </div>
             {portfolio.bio && (
@@ -76,11 +88,17 @@ export function BentoTheme({ data }: BentoThemeProps) {
                   <span>{portfolio.location}</span>
                 </div>
               )}
+              {sections.hasResumeUrl && (
+                <a href={portfolio.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-white/80 text-white/60">
+                  <Download className="w-4 h-4" />
+                  <span>Download Resume</span>
+                </a>
+              )}
             </div>
           </div>
 
           {/* Social Links Card */}
-          {socialLinks.length > 0 && (
+          {sections.hasSocialLinks && (
             <div className="col-span-2 md:col-span-3 row-span-1 bg-black border border-dashed border-white/20 p-4 text-white">
               <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-2">Social</h2>
               <div className="flex gap-2">
@@ -100,7 +118,7 @@ export function BentoTheme({ data }: BentoThemeProps) {
           )}
 
           {/* Experience Card */}
-          {experiences.length > 0 && (
+          {sections.hasExperiences && (
             <div className="col-span-4 md:col-span-4 row-span-2 bg-black border border-dashed border-white/20 p-6 overflow-hidden text-white">
               <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-4">Experience</h2>
               <div className="space-y-4">
@@ -109,7 +127,12 @@ export function BentoTheme({ data }: BentoThemeProps) {
                     <div className="w-2 h-2 mt-2 bg-white shrink-0"></div>
                     <div>
                       <h3 className="font-medium">{exp.position}</h3>
-                      <p className="text-sm text-white/60">{exp.company}</p>
+                      <p className="text-sm text-white/60">
+                        {exp.companyUrl ? (
+                          <a href={exp.companyUrl} target="_blank" rel="noopener noreferrer" className="hover:text-white/80">{exp.company}</a>
+                        ) : exp.company}
+                        {exp.employmentType && <span className="text-white/40"> · {EMPLOYMENT_TYPES_MAP[exp.employmentType]}</span>}
+                      </p>
                       <p className="text-xs text-white/40">
                         {formatDate(exp.startDate)} — {exp.isCurrent ? "Present" : formatDate(exp.endDate)}
                       </p>
@@ -121,7 +144,7 @@ export function BentoTheme({ data }: BentoThemeProps) {
           )}
 
           {/* Skills Card */}
-          {skills.length > 0 && (
+          {sections.hasSkills && (
             <div className="col-span-4 md:col-span-2 row-span-2 bg-black border border-dashed border-white/20 p-6 text-white">
               <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-4">Skills</h2>
               <div className="flex flex-wrap gap-2">
@@ -144,11 +167,14 @@ export function BentoTheme({ data }: BentoThemeProps) {
           {projects.slice(0, 2).map((project) => (
             <div
               key={project.id}
-              className="col-span-4 md:col-span-3 row-span-2 bg-black border border-dashed border-white/20 p-6 flex flex-col justify-between text-white"
+              className={`col-span-4 md:col-span-3 row-span-2 bg-black border border-dashed border-white/20 p-6 flex flex-col justify-between text-white ${project.featured ? 'border-yellow-500/30' : ''}`}
             >
               <div>
+                {project.imageUrl && (
+                  <img src={project.imageUrl} alt={project.name} className="w-full h-24 object-cover border border-dashed border-white/20 mb-3" />
+                )}
                 <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-2">
-                  Project
+                  {project.featured ? 'Featured Project' : 'Project'}
                 </h2>
                 <h3 className="text-xl font-semibold">
                   {project.name}
@@ -185,16 +211,45 @@ export function BentoTheme({ data }: BentoThemeProps) {
           ))}
 
           {/* Education Card */}
-          {education.length > 0 && (
+          {sections.hasEducation && (
             <div className="col-span-4 md:col-span-6 row-span-1 bg-black border border-dashed border-white/20 p-6 text-white">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide">Education</h2>
                   <h3 className="text-xl font-semibold mt-1">
-                    {education[0].degree} in {education[0].fieldOfStudy}
+                    {education[0].degree}{education[0].fieldOfStudy ? ` in ${education[0].fieldOfStudy}` : ""}
                   </h3>
                   <p className="text-white/60">{education[0].institution}</p>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Certifications Card */}
+          {sections.hasCertifications && (
+            <div className="col-span-4 md:col-span-3 row-span-1 bg-black border border-dashed border-white/20 p-4 text-white">
+              <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-2">Certifications</h2>
+              <div className="space-y-1">
+                {certifications.slice(0, 3).map((cert) => (
+                  <div key={cert.id} className="text-sm">
+                    <span className="text-white/80">{cert.name}</span>
+                    <span className="text-white/40 text-xs ml-1">— {cert.issuer}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Languages Card */}
+          {sections.hasLanguages && (
+            <div className="col-span-4 md:col-span-3 row-span-1 bg-black border border-dashed border-white/20 p-4 text-white">
+              <h2 className="text-xs font-medium text-white/40 uppercase tracking-wide mb-2">Languages</h2>
+              <div className="flex flex-wrap gap-2">
+                {languages.map((lang) => (
+                  <span key={lang.id} className="text-xs border border-dashed border-white/20 px-2 py-1">
+                    {lang.name} · {lang.proficiency}
+                  </span>
+                ))}
               </div>
             </div>
           )}
@@ -203,3 +258,10 @@ export function BentoTheme({ data }: BentoThemeProps) {
     </div>
   );
 }
+
+export const bentoThemeConfig = {
+  id: 'bento' as const,
+  name: 'Bento',
+  description: 'Grid-based layout',
+  component: BentoTheme,
+};

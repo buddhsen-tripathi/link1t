@@ -1,12 +1,21 @@
 "use client";
 
-import { Mail, Phone, MapPin, ExternalLink, Github, Linkedin, Twitter } from "lucide-react";
+import { Mail, Phone, MapPin, ExternalLink, Github, Linkedin, Twitter, Download, Award } from "lucide-react";
 import type { PortfolioData, SocialPlatform } from "@/types/portfolio";
+import { useThemeData } from "./useThemeData";
 
 interface GlassmorphismThemeProps {
   data: PortfolioData;
   isPreview?: boolean;
 }
+
+const EMPLOYMENT_TYPES_MAP: Record<string, string> = {
+  'full-time': 'Full-time',
+  'part-time': 'Part-time',
+  'contract': 'Contract',
+  'freelance': 'Freelance',
+  'internship': 'Internship',
+};
 
 const SocialIcon = ({ platform }: { platform: SocialPlatform }) => {
   switch (platform) {
@@ -22,7 +31,7 @@ const SocialIcon = ({ platform }: { platform: SocialPlatform }) => {
 };
 
 export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
-  const { portfolio, experiences, education, projects, skills, socialLinks } = data;
+  const { portfolio, experiences, education, projects, skills, socialLinks, certifications, languages, sections, formatDate: fmt } = useThemeData(data);
 
   const formatDate = (date: string) => {
     if (!date) return "";
@@ -61,6 +70,9 @@ export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
               {portfolio.title && (
                 <p className="mt-2 text-xl text-gray-600">{portfolio.title}</p>
               )}
+              {sections.hasHeadline && (
+                <p className="mt-1 text-sm text-gray-500 italic">{portfolio.headline}</p>
+              )}
               <div className="mt-4 flex flex-wrap justify-center md:justify-start gap-4 text-sm text-gray-500">
                 {portfolio.email && (
                   <a href={`mailto:${portfolio.email}`} className="flex items-center gap-2 hover:text-gray-900 transition-colors">
@@ -80,6 +92,12 @@ export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
                     {portfolio.location}
                   </span>
                 )}
+                {sections.hasResumeUrl && (
+                  <a href={portfolio.resumeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-gray-900 transition-colors">
+                    <Download className="w-4 h-4" />
+                    Resume
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -94,7 +112,7 @@ export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
         )}
 
         {/* Experience */}
-        {experiences.length > 0 && (
+        {sections.hasExperiences && (
           <GlassCard className="p-6 mb-8">
             <h2 className="text-sm uppercase tracking-wider text-gray-400 mb-6">Experience</h2>
             <div className="space-y-6">
@@ -103,7 +121,12 @@ export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
                     <div>
                       <h3 className="font-semibold text-gray-900">{exp.position}</h3>
-                      <p className="text-gray-600">{exp.company}</p>
+                      <p className="text-gray-600">
+                        {exp.companyUrl ? (
+                          <a href={exp.companyUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{exp.company}</a>
+                        ) : exp.company}
+                        {exp.employmentType && <span className="text-gray-400 text-sm ml-1">· {EMPLOYMENT_TYPES_MAP[exp.employmentType]}</span>}
+                      </p>
                     </div>
                     <span className="text-sm text-gray-400">
                       {formatDate(exp.startDate)} — {exp.isCurrent ? "Present" : formatDate(exp.endDate)}
@@ -119,7 +142,7 @@ export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
         )}
 
         {/* Education */}
-        {education.length > 0 && (
+        {sections.hasEducation && (
           <GlassCard className="p-6 mb-8">
             <h2 className="text-sm uppercase tracking-wider text-gray-400 mb-6">Education</h2>
             <div className="space-y-4">
@@ -135,14 +158,20 @@ export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
         )}
 
         {/* Projects */}
-        {projects.length > 0 && (
+        {sections.hasProjects && (
           <div className="mb-8">
             <h2 className="text-sm uppercase tracking-wider text-gray-400 mb-6 px-2">Projects</h2>
             <div className="grid md:grid-cols-2 gap-4">
               {projects.map((project) => (
-                <GlassCard key={project.id} className="p-5">
+                <GlassCard key={project.id} className={`p-5 ${project.featured ? 'ring-2 ring-yellow-300/50' : ''}`}>
+                  {project.imageUrl && (
+                    <img src={project.imageUrl} alt={project.name} className="w-full h-32 object-cover rounded-lg mb-3" />
+                  )}
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-gray-900">{project.name}</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      {project.name}
+                      {project.featured && <span className="ml-1 text-xs text-yellow-600">★</span>}
+                    </h3>
                     <div className="flex gap-2 shrink-0">
                       {project.url && (
                         <a href={project.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors">
@@ -175,7 +204,7 @@ export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
         )}
 
         {/* Skills */}
-        {skills.length > 0 && (
+        {sections.hasSkills && (
           <GlassCard className="p-6 mb-8">
             <h2 className="text-sm uppercase tracking-wider text-gray-400 mb-4">Skills</h2>
             <div className="flex flex-wrap gap-2">
@@ -191,8 +220,47 @@ export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
           </GlassCard>
         )}
 
+        {/* Certifications */}
+        {sections.hasCertifications && (
+          <GlassCard className="p-6 mb-8">
+            <h2 className="text-sm uppercase tracking-wider text-gray-400 mb-4">Certifications</h2>
+            <div className="space-y-3">
+              {certifications.map((cert) => (
+                <div key={cert.id} className="flex items-start gap-3">
+                  <Award className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
+                  <div>
+                    <h3 className="font-medium text-gray-900">
+                      {cert.credentialUrl ? (
+                        <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer" className="hover:underline">{cert.name}</a>
+                      ) : cert.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">{cert.issuer}</p>
+                    {cert.formattedIssueDate && (
+                      <p className="text-xs text-gray-400">{cert.formattedIssueDate}{cert.formattedExpiryDate && ` — ${cert.formattedExpiryDate}`}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
+        )}
+
+        {/* Languages */}
+        {sections.hasLanguages && (
+          <GlassCard className="p-6 mb-8">
+            <h2 className="text-sm uppercase tracking-wider text-gray-400 mb-4">Languages</h2>
+            <div className="flex flex-wrap gap-2">
+              {languages.map((lang) => (
+                <span key={lang.id} className="px-3 py-1.5 bg-gray-100 rounded-full text-sm text-gray-700 border border-gray-200">
+                  {lang.name} · {lang.proficiency}
+                </span>
+              ))}
+            </div>
+          </GlassCard>
+        )}
+
         {/* Social Links */}
-        {socialLinks.length > 0 && (
+        {sections.hasSocialLinks && (
           <div className="flex justify-center gap-4">
             {socialLinks.map((link) => (
               <a
@@ -211,3 +279,10 @@ export function GlassmorphismTheme({ data }: GlassmorphismThemeProps) {
     </div>
   );
 }
+
+export const glassmorphismThemeConfig = {
+  id: 'glassmorphism' as const,
+  name: 'Glass',
+  description: 'Frosted glass effects',
+  component: GlassmorphismTheme,
+};
